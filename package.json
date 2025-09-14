@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "start": "webpack-dev-server --no-hot --live-reload",
-    "build": "webpack"
-  },
+	"start": "SET NODE_OPTIONS=--openssl-legacy-provider && webpack-dev-server --no-hot --live-reload",
+	"build": "webpack"
+   },
   "devDependencies": {
     "@types/webgl2": "0.0.6",
     "ts-loader": "^9.2.5",
