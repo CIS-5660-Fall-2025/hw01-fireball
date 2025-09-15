@@ -37,6 +37,7 @@ class OpenGLRenderer {
       1.0
     ));
     prog.setTime(time);
+    prog.setTurbulence(1.5, 0.2, 0.5, 5);
 
     for (let drawable of drawables) {
       prog.draw(drawable);

@@ -13,6 +13,10 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
+  noiseScale: 1.5,
+  amplitude: 0.2,
+  speed: 0.5,
+  octaves: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   color: [ 0, 128, 255],
 };
@@ -21,6 +25,10 @@ let icosphere: Icosphere;
 let square: Square;
 let cube: Cube; 
 let prevTesselations: number = 5;
+let prevNoiseScale: number = 1.5;
+let prevAmplitude: number = 0.2;
+let prevSpeed: number = 0.5;
+let prevOctaves: number = 5;
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
@@ -44,6 +52,10 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
+  gui.add(controls, 'noiseScale', 0.1, 10.0).step(0.1);
+  gui.add(controls, 'amplitude', 0.0, 1.0).step(0.01);
+  gui.add(controls, 'speed', 0.0, 5.0).step(0.1);
+  gui.add(controls, 'octaves', 1, 10).step(1);
   gui.addColor(controls, "color"); 
 
   // get canvas and webgl context
@@ -80,6 +92,13 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/fire-frag.glsl')),
   ]);
 
+  function turbulenceSettingChanged(): boolean {
+    return (prevNoiseScale != controls.noiseScale) || 
+      (prevAmplitude != controls.amplitude) || 
+      (prevSpeed != controls.speed) || 
+      (prevOctaves != controls.octaves);
+  }
+
   // This function will be called every frame
   function tick() {
     camera.update();
@@ -94,6 +113,16 @@ function main() {
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
+
+    if(turbulenceSettingChanged()) {
+      prevNoiseScale = controls.noiseScale;
+      prevAmplitude = controls.amplitude;
+      prevSpeed = controls.speed;
+      prevOctaves = controls.octaves;
+
+      fire.setTurbulence(prevNoiseScale, prevAmplitude, prevSpeed, prevOctaves);
+    }
+
     renderer.render(camera, fire, [
       icosphere,
       // square,
