@@ -80,6 +80,11 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-frag.glsl')),
   ]);
 
+  const fireBallShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/fireball-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
+  ]);
+
   // This function will be called every frame
   function tick() {
     const deltaTime = 1.0/144.0;
@@ -102,10 +107,10 @@ function main() {
       let col : vec4 = vec4.fromValues(((prevColor >> 16)*1.0)/255.0, (((prevColor >> 8) % 256)*1.0)/255.0, (((prevColor) % 256)*1.0)/255.0, 1);
       currColor = col;
     }
-    renderer.render(camera, customShader, [
-      //icosphere,
+    renderer.render(camera, fireBallShader, [
+      icosphere,
       //square,
-      cube,
+      //cube,
     ], currColor, timeSinceStart);
     stats.end();
 
