@@ -1,5 +1,40 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+Description:
+
+This project implemented a fireball effect.  
+
+The toolbox functions used:
+- Vertex Shader (deformation):
+    - Base hash
+    - Worley noise
+    - FBM using Worley noise
+    - Sinusoidal functions
+- Fragment Shader (color):
+    - Bias
+    - Pulse
+    - Worly noise (from vertex shader)
+
+Extra Spice:
+
+Mouse interactivity. 
+
+When the users click, the inner fireball would "explode" and become partially larger based on the mouse position (see the second image below).
+
+Screenshot:
+
+Base:
+
+![](imgs/screenshot1.png)
+
+OnClick:
+
+![](imgs/screenshot2.png)
+
+Link:
+
+[Live Demo](http://TianhongZhou.github.io/hw01-fireball)
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
