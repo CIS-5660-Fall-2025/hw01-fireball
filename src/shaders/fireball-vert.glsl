@@ -31,10 +31,33 @@ out vec4 fs_Nor;            // The array of normals that has been transformed by
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Pos;
-out float fs_Displacement;
+out float fs_Heat;
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
+
+#define PI 3.141592
+
+// From toolbox slides
+float bias(float b, float t) {
+    return pow(t, log(b) / log(.5));
+}
+
+float gain(float g, float t) {
+    if(t < 0.5)
+        return bias(1.-g, 2.*t) / 2.;
+    else
+        return 1. - bias(1.-g, 2.-2.*t) / 2.;
+}
+
+float cubicPulse(float c, float w, float x) {
+    // c - center, w - taper length
+    x = abs(x-c);
+    if(x > w) return 0.;
+    x /= w;
+    return 1. - x*x*(3.-2.*x);
+}
+//
 
 float hash31(vec3 p3) // From https://www.shadertoy.com/view/4djSRW
 {
@@ -109,6 +132,10 @@ float trigNoise(vec3 p) {
     return (1.2*sin(p.x*3.4+p.z)*cos(p.y*5.2-p.z*1.34)*cos(p.x*4.2-p.y*1.2))*.5+.5;
 }
 
+float topOffset(vec3 p) {
+    return 5.*bias(0.001, max(0., 1.-acos(normalize(p).y)/(PI*.5)));
+}
+
 // toolbox pulse at the top and pulsing fire
 // flicker fire
 // moving glow noise
@@ -119,10 +146,13 @@ vec3 modify(vec3 p) {
     vec3 sp = p;
     sp += u_Time * vec3(0.4, -0.8, 0.45);
 
-    float offset = 2.*trigNoise(sp)+fbm(sp);
-    fs_Displacement = offset;
+    float heatOffset = 2.*trigNoise(sp)+fbm(sp);
+    fs_Heat = heatOffset;
 
-    p += 0.1*offset*fs_Nor.xyz;
+    float topOffset = topOffset(p);
+
+    float finalOffset = heatOffset + topOffset;
+    p += 0.1*finalOffset*fs_Nor.xyz;
     return p;
 }
 

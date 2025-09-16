@@ -87,7 +87,7 @@ function main() {
 
   // This function will be called every frame
   function tick() {
-    const deltaTime = 1.0/144.0;
+    const deltaTime = 3.0/144.0;
     timeSinceStart += deltaTime;
 
     camera.update();

@@ -20,27 +20,13 @@ in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec4 fs_Pos;
-in float fs_Displacement;
+in float fs_Heat;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 
-
-vec3 getBottomToTopCol(vec3 p, float disp) {
-    const vec3 hotCol = vec3(1.5);
-    const vec3 topCol = vec3(1., 0.3, 0.);
-
-    float interpo = smoothstep(0., 2., p.y+disp);
-
-    return mix(hotCol, topCol, interpo);
-}
-
-vec3 getDisplaceNoiseCol(vec3 p, float disp) {
-    return vec3(-1.,0.,0.)+vec3(2.,0.,0.)* smoothstep(0.7, 3., fs_Displacement);
-}
-
-float getHotness(vec3 p, float disp) {
-    return 2.*smoothstep(1.4, -1., p.y-disp*0.7+1.) + 0.2*(min(2.5,disp)-1.5);
+float getHotness(vec3 p, float heat) {
+    return 2.*smoothstep(1.4, -1., p.y-heat*0.7+1.) + 0.2*(min(2.5,heat)-1.5);
 }
 
 vec3 hotnessToCol(float hotness) {
@@ -65,7 +51,7 @@ void main()
     vec3 p = fs_Pos.xyz;
 
     //vec3 col = getDisplaceNoiseCol(p, fs_Displacement) + getBottomToTopCol(p, fs_Displacement);
-    vec3 col = hotnessToCol(getHotness(p, fs_Displacement));
+    vec3 col = hotnessToCol(getHotness(p, fs_Heat));
 
     out_Col = vec4(col, 1.);
 }
