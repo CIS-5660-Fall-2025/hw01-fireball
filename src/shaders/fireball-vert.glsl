@@ -31,7 +31,8 @@ out vec4 fs_Nor;            // The array of normals that has been transformed by
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Pos;
-out float fs_Heat;
+out float fs_Disp;
+out float fs_TopDisp;
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
@@ -133,7 +134,19 @@ float trigNoise(vec3 p) {
 }
 
 float topOffset(vec3 p) {
-    return 5.*bias(0.001, max(0., 1.-acos(normalize(p).y)/(PI*.5)));
+    return 3.*bias(0.04, max(0., 1.-acos(normalize(p).y)/(PI*.5)));
+}
+
+float getStretchSqueeze(vec3 p) {
+    float stretch = 0.2*smoothstep(1.9, -1.5, p.y);
+
+    return stretch;
+}
+
+float getTopNoise(vec3 p) {
+    float mult = smoothstep(0.2, 1.2, p.y);
+
+    return 5.*bias(0.1, fbm(1.5*(p+0.4*u_Time*vec3(-.1,-1.,.2))))*mult;
 }
 
 // toolbox pulse at the top and pulsing fire
@@ -141,18 +154,27 @@ float topOffset(vec3 p) {
 // moving glow noise
 // glow wrt noise
 // can make background that new volume ra ymarching and make it glowery firey and make it burn with noise
+// fountain geyser slight amt so it like billows moving (deltarune hammers)
 
 vec3 modify(vec3 p) {
     vec3 sp = p;
     sp += u_Time * vec3(0.4, -0.8, 0.45);
 
     float heatOffset = 2.*trigNoise(sp)+fbm(sp);
-    fs_Heat = heatOffset;
+    fs_Disp = heatOffset;
 
     float topOffset = topOffset(p);
 
-    float finalOffset = heatOffset + topOffset;
-    p += 0.1*finalOffset*fs_Nor.xyz;
+    float finalOffset = heatOffset + topOffset;// + topNoise;
+    p += 0.2*finalOffset*fs_Nor.xyz;
+
+    float topNoise = getTopNoise(p);
+    float upOffset = topNoise;
+    fs_TopDisp = topNoise;
+    p.y += 0.2*upOffset;
+    
+    float stretchSqueeze = getStretchSqueeze(p);
+    p.xz *= 1.+stretchSqueeze;
     return p;
 }
 
