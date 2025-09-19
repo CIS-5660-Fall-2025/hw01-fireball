@@ -45,8 +45,8 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   var palette = {
-    color1: [99, 32, 255, 1],
-    color2: [255, 47, 169, 1]
+    color1: [255, 160, 160, 1],
+    color2: [255, 5, 5, 1]
   };
 
 
@@ -79,8 +79,8 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
 
   const custom = new ShaderProgram([
-    new Shader(gl.VERTEX_SHADER, require('./shaders/custom-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-frag.glsl')),
+    new Shader(gl.VERTEX_SHADER, require('./shaders/fireball-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
   ]);
 
   // This function will be called every frame
@@ -93,7 +93,7 @@ function main() {
     if(controls.tesselations != prevTesselations)
     {
       prevTesselations = controls.tesselations;
-      icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 0.2, prevTesselations);
+      icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
 
