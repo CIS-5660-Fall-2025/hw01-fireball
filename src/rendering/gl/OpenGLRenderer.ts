@@ -22,8 +22,18 @@ class OpenGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 
-  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number) {
-    prog.setEyeRefUp(camera.controls.eye, camera.controls.center, camera.controls.up);
+  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, color1: vec4, color2: vec4, freq: number, time: number) {
+    let model = mat4.create();
+    let viewProj = mat4.create();
+    // let color = vec4.fromValues(1, 1, 1, 1);
+
+    mat4.identity(model);
+    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+    prog.setModelMatrix(model);
+    prog.setViewProjMatrix(viewProj);
+    prog.setGeometryColor1(color1);
+    prog.setGeometryColor2(color2);
+    prog.setFreq(freq);
     prog.setTime(time);
 
     for (let drawable of drawables) {
