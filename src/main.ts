@@ -95,7 +95,7 @@ function main() {
 
   // This function will be called every frame
   function tick() {
-    const deltaTime = 7.0/144.0;
+    const deltaTime = 7.0/144.0; //7
     timeSinceStart += deltaTime;
 
     camera.update();
@@ -115,7 +115,7 @@ function main() {
       let col : vec4 = vec4.fromValues(((prevColor >> 16)*1.0)/255.0, (((prevColor >> 8) % 256)*1.0)/255.0, (((prevColor) % 256)*1.0)/255.0, 1);
       currColor = col;
     }
-    renderer.render(camera, passthroughShader, [square], currColor, timeSinceStart, aspect);
+    renderer.render(camera, passthroughShader, [square], currColor, timeSinceStart*0.5, aspect);
     renderer.render(camera, fireBallShader, [
       icosphere,
       //square,

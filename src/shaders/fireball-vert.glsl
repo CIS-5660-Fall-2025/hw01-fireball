@@ -138,9 +138,12 @@ float topOffset(vec3 p) {
 }
 
 float getStretchSqueeze(vec3 p) {
-    float stretch = 0.2*smoothstep(1.9, -1.5, p.y);
+    float bt = 7.*u_Time;
+    float oscillate = .05*sin(3.9*p.y-0.7*bt) + .015*cos(8.*p.y+32.3-bt) + .007*cos(15.*p.y-2.3*bt);
 
-    return stretch;
+    float stretch = (0.15+0.05*(sin(bt)*.5+.5))*smoothstep(1.9, -1.5, p.y);
+
+    return stretch+.4*oscillate;
 }
 
 float getTopNoise(vec3 p) {
@@ -149,10 +152,7 @@ float getTopNoise(vec3 p) {
     return 5.*bias(0.1, fbm(1.5*(p+0.4*u_Time*vec3(-.1,-1.,.2))))*mult;
 }
 
-// toolbox pulse at the top and pulsing fire
 // flicker fire
-// moving glow noise
-// glow wrt noise
 // can make background that new volume ra ymarching and make it glowery firey and make it burn with noise
 // fountain geyser slight amt so it like billows moving (deltarune hammers)
 
@@ -194,6 +194,7 @@ void main()
     modelposition.xyz = modify(modelposition.xyz);
     fs_Pos = modelposition;
     modelposition.xyz = rotX(-3.141592*.5) * modelposition.xyz;
+    modelposition.z *= 1.5;
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
 
