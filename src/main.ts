@@ -1,7 +1,8 @@
-import {vec2, vec3} from 'gl-matrix';
-// import * as Stats from 'stats-js';
-// import * as DAT from 'dat-gui';
+import {vec2, vec3, vec4} from 'gl-matrix';
+const Stats = require('stats-js');
+import * as DAT from 'dat.gui';
 import Square from './geometry/Square';
+import Icosphere from './geometry/Icosphere';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -12,15 +13,22 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
+  u_Color: [255.0, 255.0, 254.0, 1.0]
 };
 
 let square: Square;
+let innerFireball: Icosphere;
 let time: number = 0;
+let prevTesselations: number = 5;
+let prevColor: Array<number> = controls.u_Color.slice();
+
 
 function loadScene() {
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
-  // time = 0;
+  innerFireball = new Icosphere(vec3.fromValues(0, 0, 0), 1, 4);
+  innerFireball.create();
+  // square = new Square(vec3.fromValues(0, 0, 0));
+  // square.create();
+  //time = 0;
 }
 
 function main() {
@@ -38,15 +46,19 @@ function main() {
   }, false);
 
   // Initial display for framerate
-  // const stats = Stats();
-  // stats.setMode(0);
-  // stats.domElement.style.position = 'absolute';
-  // stats.domElement.style.left = '0px';
-  // stats.domElement.style.top = '0px';
-  // document.body.appendChild(stats.domElement);
+  const stats = Stats();
+  stats.setMode(0);
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.left = '0px';
+  stats.domElement.style.top = '0px';
+  document.body.appendChild(stats.domElement);
 
   // Add controls to the gui
   // const gui = new DAT.GUI();
+  const gui = new DAT.GUI();
+  gui.add(controls, 'tesselations', 0, 8).step(1);
+  gui.add(controls, 'Load Scene');
+  gui.addColor(controls, 'u_Color');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -61,7 +73,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 0, -10), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(164.0 / 255.0, 233.0 / 255.0, 1.0, 1);
@@ -72,6 +84,19 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
 
+  
+  const lambert = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
+  ]);
+
+    lambert.setGeometryColor(vec4.fromValues(
+      controls.u_Color[0] / 255.0,
+      controls.u_Color[1] / 255.0,
+      controls.u_Color[2] / 255.0,
+      controls.u_Color[3]
+    ));
+
   function processKeyPresses() {
     // Use this if you wish
   }
@@ -79,15 +104,40 @@ function main() {
   // This function will be called every frame
   function tick() {
     camera.update();
-    // stats.begin();
+    stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+    
     processKeyPresses();
-    renderer.render(camera, flat, [
-      square,
+
+    lambert.setGeometryColor(vec4.fromValues(
+      controls.u_Color[0] / 255.0,
+      controls.u_Color[1] / 255.0,
+      controls.u_Color[2] / 255.0,
+      controls.u_Color[3]
+    ));
+
+    if(controls.u_Color.some((v,i) => v != prevColor[i]))
+    {
+      prevColor = controls.u_Color.slice();
+      lambert.setGeometryColor(vec4.fromValues(
+        controls.u_Color[0] / 255.0,
+        controls.u_Color[1] / 255.0,
+        controls.u_Color[2] / 255.0,
+        controls.u_Color[3]
+      ));
+
+    }
+    // renderer.render(camera, flat, [
+    //   square,
+    // ], time);
+    
+    renderer.render(camera, lambert, [
+      innerFireball,
     ], time);
+
     time++;
-    // stats.end();
+    stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);

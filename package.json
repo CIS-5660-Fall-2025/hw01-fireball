@@ -1,5 +1,5 @@
 {
-  "homepage": "https://tsingloo.github.io/hw00-intro-base/",
+  "homepage": "https://github.com/TsingLoo/ProceduralCG-hw01-fireball",
   "scripts": {
     "start": "SET NODE_OPTIONS=--openssl-legacy-provider && webpack-dev-server --no-hot --live-reload",
     "build": "webpack"
