@@ -1,4 +1,12 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
+by Avi Serebrenik
+
+## Results
+I have created a procedural "Fire Axolotl/Fish" (Axolish?) viewable here: https://ser-avi.github.io/hw01-fireball/
+The fish's object is an icosphere that is procedurally modified to be elongated to a fish shape and then further modified to get flame-like fins and a tail.
+The value where the fins and tail start can be modified in the gui, same with the animation's speed, and the base and highlight colors.
+The fish's eyes are two more icospheres drawn after the fish and placed in the right spot in a shader. They are simply drawn flat black.
+To return to the base presets, just press the "Load Scene" button in the gui.
 
 ## Objective
 
