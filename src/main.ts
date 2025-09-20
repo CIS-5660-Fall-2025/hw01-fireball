@@ -53,6 +53,9 @@ function main() {
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
+  const width = canvas.width;
+  const height = canvas.height;
+  const aspect = (1.0*width)/(1.0*height);
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
   if (!gl) {
     alert('WebGL 2 not supported!');
@@ -69,6 +72,11 @@ function main() {
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
+
+  const passthroughShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/passthrough-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/raymarchBackground-frag.glsl')),
+  ]);
 
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
@@ -87,7 +95,7 @@ function main() {
 
   // This function will be called every frame
   function tick() {
-    const deltaTime = 3.0/144.0;
+    const deltaTime = 7.0/144.0;
     timeSinceStart += deltaTime;
 
     camera.update();
@@ -107,11 +115,12 @@ function main() {
       let col : vec4 = vec4.fromValues(((prevColor >> 16)*1.0)/255.0, (((prevColor >> 8) % 256)*1.0)/255.0, (((prevColor) % 256)*1.0)/255.0, 1);
       currColor = col;
     }
+    renderer.render(camera, passthroughShader, [square], currColor, timeSinceStart, aspect);
     renderer.render(camera, fireBallShader, [
       icosphere,
       //square,
       //cube,
-    ], currColor, timeSinceStart);
+    ], currColor, timeSinceStart, aspect);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

@@ -32,6 +32,8 @@ class ShaderProgram {
   unifTime: WebGLUniformLocation;
   unifCamPos: WebGLUniformLocation;
   unifCamTarget: WebGLUniformLocation;
+  unifCamUp: WebGLUniformLocation;
+  unifAspect: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -54,6 +56,8 @@ class ShaderProgram {
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
     this.unifCamPos       = gl.getUniformLocation(this.prog, "u_CamPos");
     this.unifCamTarget       = gl.getUniformLocation(this.prog, "u_CamTarget");
+    this.unifCamUp       = gl.getUniformLocation(this.prog, "u_CamUp");
+    this.unifAspect       = gl.getUniformLocation(this.prog, "u_Aspect");
 
   }
 
@@ -99,13 +103,23 @@ class ShaderProgram {
     }
   }
 
-  setCamSpecs(pos : vec3, target : vec3) {
+  setAspect(aspect: number) {
+    this.use();
+    if(this.unifTime !== -1) {
+      gl.uniform1f(this.unifAspect, aspect);
+    }
+  }
+
+  setCamSpecs(pos : vec3, target : vec3, up : vec3) {
     this.use();
     if(this.unifCamPos !== -1) {
       gl.uniform3fv(this.unifCamPos, pos);
     }
     if(this.unifCamTarget !== -1) {
       gl.uniform3fv(this.unifCamTarget, target);
+    }
+    if(this.unifCamUp !== -1) {
+      gl.uniform3fv(this.unifCamUp, up);
     }
   }
 

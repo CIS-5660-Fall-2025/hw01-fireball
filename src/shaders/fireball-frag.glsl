@@ -91,7 +91,7 @@ vec3 fresnel(vec3 p, vec3 norm) {
 
 vec3 smoothYGlowLayer(vec3 p) {
     float val = 0.5*smoothstep(2., -1., p.y);
-    return val*vec3(1.4,0.5,0.1);
+    return 1.5*val*vec3(1.4,0.5,0.1);
 }
 
 void main()
