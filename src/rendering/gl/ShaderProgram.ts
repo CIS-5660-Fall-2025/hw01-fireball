@@ -30,6 +30,10 @@ class ShaderProgram {
   unifViewProj: WebGLUniformLocation;
   unifColor: WebGLUniformLocation;
 
+  unifNoiseAmount: WebGLUniformLocation;
+  unifNoiseSpeed: WebGLUniformLocation;
+  unifNoiseScale: WebGLUniformLocation;
+
   unifRef: WebGLUniformLocation;
   unifEye: WebGLUniformLocation;
   unifUp: WebGLUniformLocation;
@@ -54,6 +58,10 @@ class ShaderProgram {
     this.unifDimensions   = gl.getUniformLocation(this.prog, "u_Dimensions");
     this.unifTime   = gl.getUniformLocation(this.prog, "u_Time");
     
+    this.unifNoiseAmount  = gl.getUniformLocation(this.prog, "u_NoiseAmount");
+    this.unifNoiseSpeed  = gl.getUniformLocation(this.prog, "u_NoiseSpeed");
+    this.unifNoiseScale  = gl.getUniformLocation(this.prog, "u_NoiseScale");
+
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
     this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
@@ -124,6 +132,27 @@ class ShaderProgram {
     }
   }
 
+  setNoiseAmount(a: number){
+    this.use();
+    if(this.unifNoiseAmount !== -1) {
+      gl.uniform1f(this.unifNoiseAmount, a);
+    }
+  }
+
+  setNoiseSpeed(s: number){
+    this.use();
+    if(this.unifNoiseSpeed !== -1) {
+      gl.uniform1f(this.unifNoiseSpeed, s);
+    }
+  }
+
+  setNoiseScale(s: number){
+    this.use();
+    if(this.unifNoiseScale !== -1) {
+      gl.uniform1f(this.unifNoiseScale, s);
+    }
+  }
+
   draw(d: Drawable) {
     this.use();
 
@@ -136,8 +165,9 @@ class ShaderProgram {
       gl.enableVertexAttribArray(this.attrNor);
       gl.vertexAttribPointer(this.attrNor, 4, gl.FLOAT, false, 0, 0);
     }
+    
+    d.bindIdx()
 
-    d.bindIdx();
     gl.drawElements(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0);
 
     if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);

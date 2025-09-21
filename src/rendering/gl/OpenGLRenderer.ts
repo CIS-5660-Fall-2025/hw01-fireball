@@ -34,6 +34,11 @@ class OpenGLRenderer {
     prog.setEyeRefUp(camera.controls.eye, camera.controls.center, camera.controls.up);
     prog.setTime(time);
 
+    prog.setNoiseAmount(0.2);
+    prog.setNoiseSpeed(0.01);
+    prog.setNoiseScale(1.0);
+    
+
     for (let drawable of drawables) {
       prog.draw(drawable);
     }

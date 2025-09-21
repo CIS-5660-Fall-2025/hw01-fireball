@@ -2,7 +2,10 @@ import {vec2, vec3, vec4} from 'gl-matrix';
 const Stats = require('stats-js');
 import * as DAT from 'dat.gui';
 import Square from './geometry/Square';
+import Cube from './geometry/Cube';
 import Icosphere from './geometry/Icosphere';
+
+
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -18,14 +21,16 @@ const controls = {
 
 let square: Square;
 let innerFireball: Icosphere;
+
 let time: number = 0;
 let prevTesselations: number = 5;
 let prevColor: Array<number> = controls.u_Color.slice();
 
 
 function loadScene() {
-  innerFireball = new Icosphere(vec3.fromValues(0, 0, 0), 1, 4);
+  innerFireball = new Icosphere(vec3.fromValues(0, 0, 0), 1, 6);
   innerFireball.create();
+
   // square = new Square(vec3.fromValues(0, 0, 0));
   // square.create();
   //time = 0;
@@ -77,25 +82,39 @@ function main() {
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(164.0 / 255.0, 233.0 / 255.0, 1.0, 1);
+
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   gl.enable(gl.DEPTH_TEST);
 
   const flat = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/flat-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
-
   
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
 
-    lambert.setGeometryColor(vec4.fromValues(
-      controls.u_Color[0] / 255.0,
-      controls.u_Color[1] / 255.0,
-      controls.u_Color[2] / 255.0,
-      controls.u_Color[3]
-    ));
+  const inner = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/inner-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/inner-frag.glsl')),
+  ]);
+
+
+  lambert.setGeometryColor(vec4.fromValues(
+    controls.u_Color[0] / 255.0,
+    controls.u_Color[1] / 255.0,
+    controls.u_Color[2] / 255.0,
+    controls.u_Color[3]
+  ));
+
+  inner.setGeometryColor(vec4.fromValues(
+    controls.u_Color[0] / 255.0,
+    controls.u_Color[1] / 255.0,
+    controls.u_Color[2] / 255.0,
+    controls.u_Color[3]
+  ));
 
   function processKeyPresses() {
     // Use this if you wish
@@ -110,7 +129,7 @@ function main() {
     
     processKeyPresses();
 
-    lambert.setGeometryColor(vec4.fromValues(
+    inner.setGeometryColor(vec4.fromValues(
       controls.u_Color[0] / 255.0,
       controls.u_Color[1] / 255.0,
       controls.u_Color[2] / 255.0,
@@ -120,7 +139,7 @@ function main() {
     if(controls.u_Color.some((v,i) => v != prevColor[i]))
     {
       prevColor = controls.u_Color.slice();
-      lambert.setGeometryColor(vec4.fromValues(
+      inner.setGeometryColor(vec4.fromValues(
         controls.u_Color[0] / 255.0,
         controls.u_Color[1] / 255.0,
         controls.u_Color[2] / 255.0,
@@ -132,9 +151,11 @@ function main() {
     //   square,
     // ], time);
     
-    renderer.render(camera, lambert, [
+
+    renderer.render(camera, inner, [
       innerFireball,
     ], time);
+
 
     time++;
     stats.end();
