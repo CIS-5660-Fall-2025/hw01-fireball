@@ -152,13 +152,9 @@ float getTopNoise(vec3 p) {
     return 5.*bias(0.1, fbm(1.5*(p+0.4*u_Time*vec3(-.1,-1.,.2))))*mult;
 }
 
-// flicker fire
-// can make background that new volume ra ymarching and make it glowery firey and make it burn with noise
-// fountain geyser slight amt so it like billows moving (deltarune hammers)
-
 vec3 modify(vec3 p) {
     vec3 sp = p;
-    sp += u_Time * vec3(0.4, -0.8, 0.45);
+    sp += 1.5*u_Time * vec3(0.4, -0.8, 0.45);
 
     float heatOffset = 2.*trigNoise(sp)+fbm(sp);
     fs_Disp = heatOffset;

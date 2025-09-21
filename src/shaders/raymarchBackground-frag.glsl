@@ -129,7 +129,7 @@ vec3 render(vec2 p)
         vec3 marchPos = camPos + rd*d;
 
         vec3 fireballPos = camPos-((u_CamPos-u_CamTarget)*0.12+0.24*u_CamTarget);
-        e2 = max(0.005, length(marchPos-fireballPos)-.2);
+        e2 = max(0.005, 0.9*(length((marchPos-fireballPos)*vec3(1.,1.,0.8))-.2));
         s = min(max(0.005, abs(sdScene(marchPos))), e=max(0.005, (length(marchPos-sunPos)-.7))); // .6
         s = min(s, e2);
         

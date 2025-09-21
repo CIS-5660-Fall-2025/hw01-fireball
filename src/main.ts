@@ -67,7 +67,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(6.55, .82, -4.46), vec3.fromValues(2.42, .59, 1.46));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -99,6 +99,8 @@ function main() {
     timeSinceStart += deltaTime;
 
     camera.update();
+    // console.log(camera.controls.eye);
+    // console.log(camera.controls.center);
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
