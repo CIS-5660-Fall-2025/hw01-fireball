@@ -22,6 +22,7 @@ in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec4 fs_vPos;
+in float fs_Noise;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -120,8 +121,9 @@ void main()
         coord.y -= u_Time * 0.005;
         float factor = noise3D(coord * u_Freq);
         factor = clamp(factor, 0.01, 0.99);
-        vec4 diffuseColor = mix(u_Color1, u_Color2, factor);
-        // vec4 diffuseColor = u_Color;
+        // vec4 diffuseColor = mix(u_Color1, u_Color2, factor);
+
+        vec4 diffuseColor = mix(u_Color1, u_Color2, fs_Noise);
 
         // Calculate the diffuse term for Lambert shading
         vec4 newLightVec = fs_LightVec;
@@ -137,6 +139,6 @@ void main()
                                                             //lit by our point light are not completely black.
 
         // Compute final shaded color
-        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+        out_Col = vec4(diffuseColor.rgb, diffuseColor.a);
         // out_Col = vec4(0.7804, 0.2471, 0.2471, 1.0);
 }

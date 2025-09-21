@@ -31,9 +31,107 @@ out vec4 fs_Nor;            // The array of normals that has been transformed by
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_vPos;
+out float fs_Noise;
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
+
+
+//	Simplex 3D Noise by Ian McEwan, Ashima Arts
+vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+
+float random1 (float x) {
+        float f = 43758.5453123;
+        return fract(sin(x) * f);
+}
+
+float noise1D(float x) {
+        float i = floor(x);
+        float fr = fract(x);
+        return mix(random1(i), random1(i + 1.0), fr);
+}
+
+float noise3D(vec3 v){
+  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+// First corner
+  vec3 i = floor(v + dot(v, C.yyy) );
+  vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+// Other corners
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min( g.xyz, l.zxy );
+  vec3 i2 = max( g.xyz, l.zxy );
+
+  //  x0 = x0 - 0. + 0.0 * C
+  vec3 x1 = x0 - i1 + 1.0 * C.xxx;
+  vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+  vec3 x3 = x0 - 1. + 3.0 * C.xxx;
+
+// Permutations
+  i = mod(i, 289.0 );
+  vec4 p = permute( permute( permute(
+             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+// Gradients
+// ( N*N points uniformly over a square, mapped onto an octahedron.)
+  float n_ = 1.0/7.0; // N=7
+  vec3  ns = n_ * D.wyz - D.xzx;
+
+  vec4 j = p - 49.0 * floor(p * ns.z *ns.z);  //  mod(p,N*N)
+
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+  vec4 x = x_ *ns.x + ns.yyyy;
+  vec4 y = y_ *ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+
+  vec4 b0 = vec4( x.xy, y.xy );
+  vec4 b1 = vec4( x.zw, y.zw );
+
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+  vec3 p0 = vec3(a0.xy,h.x);
+  vec3 p1 = vec3(a0.zw,h.y);
+  vec3 p2 = vec3(a1.xy,h.z);
+  vec3 p3 = vec3(a1.zw,h.w);
+
+//Normalise gradients
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+  p0 *= norm.x;
+  p1 *= norm.y;
+  p2 *= norm.z;
+  p3 *= norm.w;
+
+// Mix final noise value
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+
+float fbm3D(vec3 x, int octaves, float amplitude, float frequency, vec3 shift, float lacunarity, float gain) {
+        float value = 0.0;
+        for (int i = 0; i < octaves; ++i) {
+        float sn = noise3D(x * frequency);
+        value += amplitude * sn;
+        x += shift;
+        frequency *= lacunarity;
+                amplitude *= gain;
+        }
+        return value;
+}
 
 // implementation of MurmurHash (https://sites.google.com/site/murmurhash/) for a 
 // single unsigned integer.
@@ -189,13 +287,27 @@ void main()
     fs_vPos = modelposition;
     // modelposition += vs_Nor * noise3D(vs_Nor.xyz * ) * (sin(realTime * 2.5); // * noise3D(vs_Nor.xyz * 10.0 + vec3(realTime) * 0.225);
     // modelposition += vs_Nor * noise3D(vs_Nor.xyz * 2.0 + vec3(realTime) * 0.225);
-    float time = u_Time * 0.005;
-    float amp = 1.0;
+    float time = u_Time * 0.01;
+    float amp = 2.0;
     float u = smoothstep(0.0, 1.0, 0.5 * (modelposition.y + 1.0));
-    float freq = 4.0;
-    vec3 uv = vec3(vs_Pos) + vec3(time);
-    float noise = fit01(perlinNoise(uv * freq, uint(2)));
+    int freq1 = 2;
+    int freq2 = 2;
+    int freq3 = 2;
+    vec3 uv = vec3(vs_Pos);
+    uv += 0.1 * noise3D(vec3(vs_Pos));
+    uv.y -= time;
+    //float noise = perlinNoise(uv * freq, uint(2));
+    float noiseUV1 = perlinNoise(uv, freq1, 8, 0.5, 2.0, uint(32));
+    float noiseUV2 = perlinNoise(uv, freq2, 8, 0.5, 2.0, uint(32));
+    float noiseUV3 = perlinNoise(uv, freq3, 8, 0.5, 2.0, uint(32));
+    // float noiseUV2 = perlinNoise(uv * freq2, uint(2));
+    // float noiseUV3 = perlinNoise(uv * freq3, uint(5));
+    vec3 noiseUV = vec3(noiseUV1, noiseUV2, noiseUV3);
+    float noise = perlinNoise(noiseUV+vec3(10.,0.,10.), uint(2));
+
+    noise = fit01(noise);
     modelposition.y += mix(0.0, noise, u) * amp;
+    modelposition.xz *= 0.2 - u + 1.0;
     ;
     // Output a debug color based on the vertex position
 
@@ -203,4 +315,6 @@ void main()
 
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices
+
+    fs_Noise = noise;
 }

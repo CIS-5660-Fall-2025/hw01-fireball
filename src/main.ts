@@ -45,8 +45,8 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   var palette = {
-    color1: [255, 160, 160, 1],
-    color2: [255, 5, 5, 1]
+    color1: [255, 180, 125, 1],
+    color2: [57, 15, 255, 1]
   };
 
 
