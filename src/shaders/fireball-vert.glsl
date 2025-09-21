@@ -32,6 +32,7 @@ out vec4 fs_LightVec;       // The direction in which our virtual light lies, re
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_vPos;
 out float fs_Noise;
+out float fs_yPos;
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
@@ -293,7 +294,7 @@ void main()
     // modelposition += vs_Nor * noise3D(vs_Nor.xyz * 2.0 + vec3(realTime) * 0.225);
     float time = u_Time * 0.01;
 
-    float amp = 2.;
+    float amp = 3.;
     float yFactor = smoothstep(0.0, 0.9, 0.5 * (modelposition.y + 1.0));
 
     // float freq1 = 0.5;
@@ -326,15 +327,16 @@ void main()
     vec3 noiseUV = vec3(noiseUV1, noiseUV2, noiseUV3);
     noiseUV = fit01(noiseUV);
     
-    float noise = perlinNoise(noiseUV * 1.0, uint(12));
+    float noise = perlinNoise(noiseUV * 1.5, uint(12));
 
     noise = fit01(noise);
     float radialScale = 1.0 - clamp(length(modelposition.xz) / 1.0, 0.0, 1.0);
     radialScale = pow(radialScale, 1.);
     modelposition.y += mix(0.0, noise, yFactor) * amp * radialScale;
     // modelposition.xz *= 0.2 - u + 1.0;
-    ;
-    // Output a debug color based on the vertex position
+    
+    // low freq overall displacement
+    modelposition.xyz += vec3(fs_Nor) * vec3(fbm3D(vec3(vs_Pos - u_Time * 0.01), 3, 1.0, 1.0, vec3(0.0), 2.0, 0.5)) * 0.025;
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
 
@@ -342,4 +344,5 @@ void main()
                                              // used to render the final positions of the geometry's vertices
 
     fs_Noise = noise;
+    fs_yPos = fit01(vs_Pos.y);
 }

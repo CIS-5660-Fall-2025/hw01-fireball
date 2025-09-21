@@ -23,6 +23,7 @@ in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec4 fs_vPos;
 in float fs_Noise;
+in float fs_yPos;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -123,7 +124,7 @@ void main()
         factor = clamp(factor, 0.01, 0.99);
         // vec4 diffuseColor = mix(u_Color1, u_Color2, factor);
 
-        vec4 diffuseColor = mix(u_Color1, u_Color2, fs_Noise);
+        vec4 diffuseColor = mix(u_Color1, u_Color2, (1. - fs_yPos) + 0.5 * fs_Noise);
 
         // Calculate the diffuse term for Lambert shading
         vec4 newLightVec = fs_LightVec;
