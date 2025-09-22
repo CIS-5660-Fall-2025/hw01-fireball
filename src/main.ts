@@ -19,8 +19,43 @@ const controls = {
   u_ShellColor: [255.0, 120.0, 0.0, 1.0],
   u_FireballVelocity: {x: 1.0, y: -4.5, z: -0.6},
   u_TailLength: 1.1,
-  u_FallSpeed: 4,
+  u_FallSpeed: 2.0,
+
+  'Reset Fireball': resetFireball
 };
+
+const fireballDefaults = {
+  shellColor: [255, 120, 0, 1.0],
+  fallSpeed: 2.0,
+  tailLength: 1.1,
+  velocity: {x: 1.0, y: -4.5, z: -0.6},
+};
+
+let gui: DAT.GUI; // Declare gui variable in global scope
+
+function resetFireball() {
+  // Copy default values into the live controls object
+  controls.u_ShellColor = fireballDefaults.shellColor.slice();
+  controls.u_FallSpeed = fireballDefaults.fallSpeed;
+  controls.u_TailLength = fireballDefaults.tailLength;
+
+  // For nested objects, copy property by property
+  controls.u_FireballVelocity.x = fireballDefaults.velocity.x;
+  controls.u_FireballVelocity.y = fireballDefaults.velocity.y;
+  controls.u_FireballVelocity.z = fireballDefaults.velocity.z;
+
+  // IMPORTANT: Refresh the GUI to show the new values
+  if (gui) {
+    for (let i in gui.__controllers) {
+      gui.__controllers[i].updateDisplay();
+    }
+    for (let folderName in gui.__folders) {
+      for (let i in gui.__folders[folderName].__controllers) {
+        gui.__folders[folderName].__controllers[i].updateDisplay();
+      }
+    }
+  }
+}
 
 let square: Square;
 let innerFireball: Icosphere;
@@ -67,22 +102,25 @@ function main() {
   stats.domElement.style.top = '0px';
   document.body.appendChild(stats.domElement);
 
-  // Add controls to the gui
   // const gui = new DAT.GUI();
-  const gui = new DAT.GUI();
+  gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
-  gui.add(controls, 'Load Scene');
+  //gui.add(controls, 'Load Scene');
   gui.addColor(controls, 'u_ShellColor');
   gui.add(controls, 'u_FallSpeed');
   gui.add(controls, 'u_TailLength');
-const velocityFolder = gui.addFolder('Fireball Velocity');
+  const velocityFolder = gui.addFolder('Fireball Velocity');
+  gui.add(controls, 'Reset Fireball');
 
-// Add a slider for each component
-velocityFolder.add(controls.u_FireballVelocity, 'x', -10.0, 10.0).step(0.1);
-velocityFolder.add(controls.u_FireballVelocity, 'y', -10.0, 10.0).step(0.1);
-velocityFolder.add(controls.u_FireballVelocity, 'z', -10.0, 10.0).step(0.1);
 
-velocityFolder.open();
+  // resetFireball function now moved to global scope above
+
+  // Add a slider for each component
+  velocityFolder.add(controls.u_FireballVelocity, 'x', -10.0, 10.0).step(0.1);
+  velocityFolder.add(controls.u_FireballVelocity, 'y', -10.0, 10.0).step(0.1);
+  velocityFolder.add(controls.u_FireballVelocity, 'z', -10.0, 10.0).step(0.1);
+
+  velocityFolder.open();
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
