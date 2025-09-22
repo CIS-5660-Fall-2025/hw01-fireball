@@ -7,7 +7,7 @@ For the fireball, I distorted the vertices of a sphere with fbm and trig.  There
 
 For the background, I used volumetric raymarching.  I made an SDF cylinder that has its radius oscillate with respect to the angle along the cylinder to create bright creases that look like fire.  I distorted the raymarch position and SDF samples with noise to make the background more firey.  I have a big light source in the middle of the tunnel and another light source on the fireball so it looks like it's glowing (but this light source is bugged in some perspectives). 
 
-[Live Demo Link](https://aurcereal.github.io/hw01-fireball-base/)
+[Live Demo Link](https://aurcereal.github.io/hw01-fireball/)
 
 Screenshots
 --------------------------
