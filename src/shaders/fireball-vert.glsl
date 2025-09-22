@@ -276,6 +276,11 @@ vec3 fit01(vec3 u) {
     return vec3(fit01(u.x), fit01(u.y), fit01(u.z));
 }
 
+float expImpulse(float x, float k, float gain) {
+  float h = k * x;
+  return h * exp(gain - h);
+}
+
 void main()
 {
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
@@ -290,16 +295,10 @@ void main()
 
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
     fs_vPos = modelposition;
-    // modelposition += vs_Nor * noise3D(vs_Nor.xyz * ) * (sin(realTime * 2.5); // * noise3D(vs_Nor.xyz * 10.0 + vec3(realTime) * 0.225);
-    // modelposition += vs_Nor * noise3D(vs_Nor.xyz * 2.0 + vec3(realTime) * 0.225);
     float time = u_Time * 0.01;
 
     float amp = 3.;
     float yFactor = smoothstep(0.0, 0.9, 0.5 * (modelposition.y + 1.0));
-
-    // float freq1 = 0.5;
-    // float freq2 = 0.5;
-    // float freq3 = 0.5;
 
     int freq1 = 3;
     int freq2 = 3;
@@ -308,18 +307,6 @@ void main()
     vec3 uv = vec3(vs_Pos) + vec3(1,999,1);
     // uv += 0.1 * noise3D(vec3(vs_Nor));
     uv.y -= time;
-
-    // float noiseUV1 = fbm3D(uv, 8, 1.0, freq1, vec3(0.0), 2.0, 0.5);
-    // float noiseUV2 = fbm3D(uv, 8, 1.0, freq2, vec3(0.0), 2.0, 0.5);
-    // float noiseUV3 = fbm3D(uv, 8, 1.0, freq3, vec3(0.0), 2.0, 0.5);
-    // vec3 noiseUV = vec3(noiseUV1, noiseUV2, noiseUV3);
-    // float noise = fbm3D(noiseUV, 8, 1.0, 1., vec3(0.0), 1.0, 0.5);
-
-    // float noiseUV1 = noise3D(uv * 2.0);
-    // float noiseUV2 = noise3D(uv * 2.0);
-    // float noiseUV3 = noise3D(uv * 2.0);
-    // vec3 noiseUV = vec3(noiseUV1, noiseUV2, noiseUV3);
-    // float noise = noise3D(noiseUV);
 
     float noiseUV1 = perlinNoise(uv, freq1, 8, 0.5, 2.0, uint(32));
     float noiseUV2 = perlinNoise(uv, freq2, 8, 0.5, 2.0, uint(43));
@@ -330,8 +317,11 @@ void main()
     float noise = perlinNoise(noiseUV * 1.5, uint(12));
 
     noise = fit01(noise);
+
+    // modify amp with radial distance in xz
     float radialScale = 1.0 - clamp(length(modelposition.xz) / 1.0, 0.0, 1.0);
-    radialScale = pow(radialScale, 1.);
+    radialScale = max(expImpulse(1.0 - radialScale, 5.0, 1.0), expImpulse(radialScale, 1.5, 0.1));
+
     modelposition.y += mix(0.0, noise, yFactor) * amp * radialScale;
     // modelposition.xz *= 0.2 - u + 1.0;
     
