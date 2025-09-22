@@ -157,7 +157,7 @@ float getTopNoise(vec3 p) {
 }
 
 vec2 getTrigShift(vec3 p) {
-    float y = 2.*(p.y-u_Time);
+    float y = 1.*(p.y-u_Time);
 
     return 0.1*vec2(cos(y*1.3+58.)+0.5*cos(y*2.5), sin(y*1.2+32.)+.4*cos(y*2.3));
 }

@@ -18,6 +18,7 @@ uniform vec3 u_CamTarget;
 uniform float u_Volatility;
 uniform float u_Cartooniness;
 uniform float u_Temperature;
+uniform float u_FireballBrightness;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -211,7 +212,8 @@ void main()
 
     float heatFlicker = getHeatFlicker();
 
-    vec3 col = getTotalLightFlicker()*postMixHotToCol(stripeGlow(p)+noiseGlow(p)+getHotness(p, fs_Disp, norm, fs_TopDisp)+heatFlicker) + smoothYGlowLayer(p) + fresnel(p, norm);
+    float hotness = stripeGlow(p)+noiseGlow(p)+getHotness(p, fs_Disp, norm, fs_TopDisp)+heatFlicker;
+    vec3 col = getTotalLightFlicker()*postMixHotToCol(u_FireballBrightness*hotness) + smoothYGlowLayer(p) + fresnel(p, norm);
 
     col = tanh(col)*1.5;
     col *= vec3(1.,0.9,0.7);

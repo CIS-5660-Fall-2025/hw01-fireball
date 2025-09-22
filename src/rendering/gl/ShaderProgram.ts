@@ -37,6 +37,7 @@ class ShaderProgram {
   unifVolatility: WebGLUniformLocation;
   unifCartooniness: WebGLUniformLocation;
   unifTemperature: WebGLUniformLocation;
+  unifFireballBrightness: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -64,6 +65,7 @@ class ShaderProgram {
     this.unifVolatility       = gl.getUniformLocation(this.prog, "u_Volatility");
     this.unifCartooniness       = gl.getUniformLocation(this.prog, "u_Cartooniness");
     this.unifTemperature       = gl.getUniformLocation(this.prog, "u_Temperature");
+    this.unifFireballBrightness     = gl.getUniformLocation(this.prog, "u_FireballBrightness");
 
   }
 
@@ -102,7 +104,7 @@ class ShaderProgram {
     }
   }
 
-  setFireParams(volatility: number, cartooniness: number, temperature : number) {
+  setFireParams(volatility: number, cartooniness: number, temperature : number, fireballBrightness: number) {
     this.use();
     if (this.unifVolatility !== -1) {
       gl.uniform1f(this.unifVolatility, volatility);
@@ -112,6 +114,9 @@ class ShaderProgram {
     }
     if(this.unifTemperature !== -1) {
       gl.uniform1f(this.unifTemperature, temperature);
+    }
+    if(this.unifFireballBrightness !== -1) {
+      gl.uniform1f(this.unifFireballBrightness, fireballBrightness);
     }
   }
 

@@ -18,6 +18,7 @@ const controls = {
   'Volatility' : 1,
   'Cartooniness' : 0.5,
   'Temperature' : 1.0,
+  'Fireball Brightness' : 0.9,
   'Reset To Default': resetToDefault
 };
 
@@ -46,6 +47,7 @@ function resetToDefault() {
   controls.Volatility = 1;
   controls.Cartooniness = 0.5;
   controls.Temperature = 1.0;
+  controls['Fireball Brightness'] = 0.9;
 }
 
 function main() {
@@ -65,6 +67,7 @@ function main() {
   gui.add(controls, 'Volatility', 0.6, 1.5);
   gui.add(controls, 'Cartooniness', 0, 1);
   gui.add(controls, 'Temperature', 0, 1);
+  gui.add(controls, 'Fireball Brightness', 0, 1);
   gui.add(controls, 'Reset To Default');
 
   // get canvas and webgl context
@@ -133,12 +136,12 @@ function main() {
       let col : vec4 = vec4.fromValues(((prevColor >> 16)*1.0)/255.0, (((prevColor >> 8) % 256)*1.0)/255.0, (((prevColor) % 256)*1.0)/255.0, 1);
       currColor = col;
     }
-    renderer.render(camera, passthroughShader, [square], currColor, controls.Volatility, controls.Cartooniness, controls.Temperature, timeSinceStart*0.5, aspect);
+    renderer.render(camera, passthroughShader, [square], currColor, controls.Volatility, controls.Cartooniness, controls.Temperature, controls['Fireball Brightness'], timeSinceStart*0.5, aspect);
     renderer.render(camera, fireBallShader, [
       icosphere,
       //square,
       //cube,
-    ], currColor, controls.Volatility, controls.Cartooniness, controls.Temperature, timeSinceStart, aspect);
+    ], currColor, controls.Volatility, controls.Cartooniness, controls.Temperature, controls['Fireball Brightness'], timeSinceStart, aspect);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
