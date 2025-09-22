@@ -1,5 +1,14 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+#
+Inspiration drawn from 
+https://www.shadertoy.com/view/lt2BRm
+
+took some noise functions from Adam's shadertoy account
+and also a 3D perlin noise from:
+https://www.shadertoy.com/view/slB3z3
+
+Set up the post-process frame buffer with some help from llm...hopefully thats ok...( beacuse I wanted to spend more time on actual shader coding)
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.

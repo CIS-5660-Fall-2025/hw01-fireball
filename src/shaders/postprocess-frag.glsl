@@ -1,42 +1,12 @@
 #version 300 es
+precision highp float;
 
-//This is a vertex shader. While it is called a "shader" due to outdated conventions, this file
-//is used to apply matrix transformations to the arrays of vertex data passed to it.
-//Since this code is run on your GPU, each vertex is transformed simultaneously.
-//If it were run on your CPU, each vertex would have to be processed in a FOR loop, one at a time.
-//This simultaneous transformation allows your program to run much faster, especially when rendering
-//geometry with millions of vertices.
-
-uniform mat4 u_Model;       // The matrix that defines the transformation of the
-                            // object we're rendering. In this assignment,
-                            // this will be the result of traversing your scene graph.
-
-uniform mat4 u_ModelInvTr;  // The inverse transpose of the model matrix.
-                            // This allows us to transform the object's normals properly
-                            // if the object has been non-uniformly scaled.
-
-uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformation.
-                            // We've written a static matrix for you to use for HW2,
-                            // but in HW3 you'll have to generate one yourself
-
+uniform sampler2D u_SceneTex;
+uniform vec2 u_Resolution;
 uniform float u_Time;
 
-in vec4 vs_Pos;             // The array of vertex positions passed to the shader
-
-in vec4 vs_Nor;             // The array of vertex normals passed to the shader
-
-in vec4 vs_Col;             // The array of vertex colors passed to the shader.
-
-out vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.
-out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
-out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
-out vec4 fs_vPos;
-out float fs_Noise;
-out float fs_yPos;
-
-const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
-                                        //the geometry in the fragment shader.
-
+in vec2 v_UV;
+out vec4 out_Col;
 
 //	Simplex 3D Noise by Ian McEwan, Ashima Arts
 vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
@@ -268,74 +238,47 @@ float perlinNoise(vec3 position, int frequency, int octaveCount, float persisten
     return value;
 }
 
-float fit01(float u) {
-    return 0.5 * (u + 1.0);
+
+// fake normal from height map
+// Built-in-derivative version (requires GLSL ES 3.00+)
+vec3 heightToNormal(float h, float strength) {
+  float dhdx = dFdx(h);
+  float dhdy = dFdy(h);
+  return normalize(vec3(-strength * dhdx, -strength * dhdy, 1.0));
 }
 
-vec3 fit01(vec3 u) {
-    return vec3(fit01(u.x), fit01(u.y), fit01(u.z));
+void main() {
+    vec2 uv = v_UV;
+
+    // Sample scene color
+    vec3 sceneCol = texture(u_SceneTex, uv).rgb;
+    // float grain = perlinNoise(vec3(uv, 1.) * 100., uint(213));
+    // grain = perlinNoise(vec3(grain), uint(12));
+    // sceneCol += 0.1 * vec3(grain);
+    // out_Col = vec4(sceneCol, 1.0);
+
+    // Watercolor paper grain: use fbm of uv mapped to 3D with time scroll
+    vec3 p = vec3(uv * u_Resolution / 20., 1.0);
+    p.x *= 0.4;
+    float grain = perlinNoise(p, 1, 8, 0.5, 2.0, uint(232));
+    // grain = 0.5 * grain + 0.5; // to [0,1]
+
+    // lambert
+    vec3 normal = heightToNormal(grain, 0.6);
+    vec3 lightVec = vec3(0.5, 0.5, 0.5);
+    lightVec.x *= cos(u_Time * 0.005);
+    lightVec.y *= sin(u_Time * 0.005);
+
+    float diffuseTerm = dot(normalize(normal), normalize(lightVec));
+    diffuseTerm = clamp(diffuseTerm, 0.001, 0.999);
+    float ambientTerm = 0.1;
+    float lightIntensity = diffuseTerm + ambientTerm; 
+    lightIntensity = clamp(lightIntensity, 0.001, 0.999);
+
+    // grain *= uv.x;
+    // sceneCol += 0.1 * grain;
+    out_Col = vec4(vec3(sceneCol * diffuseTerm), 1.0);
+    // out_Col = vec4(sceneCol, 1.0);
 }
 
-float expImpulse(float x, float k, float gain) {
-  float h = k * x;
-  return h * exp(gain - h);
-}
 
-void main()
-{
-    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
-
-    mat3 invTranspose = mat3(u_ModelInvTr);
-    fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);       // Pass the vertex normals to the fragment shader for interpolation.
-                                                            // Transform the geometry's normals by the inverse transpose of the
-                                                            // model matrix. This is necessary to ensure the normals remain
-                                                            // perpendicular to the surface after the surface is transformed by
-                                                            // the model matrix.
-
-
-    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
-    fs_vPos = modelposition;
-    float time = u_Time * 0.01;
-
-    float amp = 3.;
-    float yFactor = smoothstep(0.0, 0.9, 0.5 * (modelposition.y + 1.0));
-
-    int freq1 = 3;
-    int freq2 = 3;
-    int freq3 = 3;
-
-    vec3 uv = vec3(vs_Pos) + vec3(1,999,1);
-    // uv += 0.1 * noise3D(vec3(vs_Nor));
-    uv.y -= time;
-
-    float noiseUV1 = perlinNoise(uv, freq1, 8, 0.5, 2.0, uint(32));
-    float noiseUV2 = perlinNoise(uv, freq2, 8, 0.5, 2.0, uint(43));
-    float noiseUV3 = perlinNoise(uv, freq3, 8, 0.5, 2.0, uint(5432));
-    vec3 noiseUV = vec3(noiseUV1, noiseUV2, noiseUV3);
-    noiseUV = fit01(noiseUV);
-    
-    float noise = perlinNoise(noiseUV * 1.5, uint(12));
-
-    noise = fit01(noise);
-
-    // modify amp with radial distance in xz
-    float radialScale = 1.0 - clamp(length(modelposition.xz) / 1.0, 0.0, 1.0);
-    float inner = expImpulse(1.0 - radialScale, 5.25, 1.2);
-    inner = pow(inner, 1.2);
-    float outer = expImpulse(radialScale, 1.5, 0.1);
-    radialScale = max(inner, outer);
-
-    modelposition.y += mix(0.0, noise, yFactor) * amp * radialScale;
-    // modelposition.xz *= 0.2 - u + 1.0;
-    
-    // low freq overall displacement
-    modelposition.xyz += vec3(fs_Nor) * vec3(fbm3D(vec3(vs_Pos - u_Time * 0.01), 3, 1.0, 1.0, vec3(0.0), 2.0, 0.5)) * 0.025;
-
-    fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
-
-    gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
-                                             // used to render the final positions of the geometry's vertices
-
-    fs_Noise = noise;
-    fs_yPos = fit01(vs_Pos.y);
-}

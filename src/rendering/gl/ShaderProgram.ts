@@ -32,6 +32,8 @@ class ShaderProgram {
   unifColor2: WebGLUniformLocation;
   unifFreq: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+  unifSceneTex: WebGLUniformLocation;
+  unifResolution: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -54,6 +56,8 @@ class ShaderProgram {
     this.unifColor2      = gl.getUniformLocation(this.prog, "u_Color2");
     this.unifFreq        = gl.getUniformLocation(this.prog, "u_Freq");
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
+    this.unifSceneTex   = gl.getUniformLocation(this.prog, "u_SceneTex");
+    this.unifResolution = gl.getUniformLocation(this.prog, "u_Resolution");
   }
 
   use() {
@@ -109,6 +113,20 @@ class ShaderProgram {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, time);
+    }
+  }
+
+  setSceneTexture(texUnit: number) {
+    this.use();
+    if (this.unifSceneTex !== -1) {
+      gl.uniform1i(this.unifSceneTex, texUnit);
+    }
+  }
+
+  setResolution(width: number, height: number) {
+    this.use();
+    if (this.unifResolution !== -1) {
+      gl.uniform2f(this.unifResolution, width, height);
     }
   }
 

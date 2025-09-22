@@ -72,15 +72,20 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 0, 10), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(0, 0, 7), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(0.98, 0.965, 0.93, 1);
   gl.enable(gl.DEPTH_TEST);
 
   const custom = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/fireball-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
+  ]);
+
+  const post = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/postprocess-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/postprocess-frag.glsl')),
   ]);
 
   // This function will be called every frame
@@ -103,26 +108,18 @@ function main() {
       prevShape = controls.shape;
     }
 
-    if (prevShape === 1) {
-        renderer.render(camera, custom, [
-      // cube, 
-      icosphere,
-      // square,
-    ], vec4.fromValues(palette.color1[0] / 255, palette.color1[1] / 255, palette.color1[2] / 255, 1), 
-    vec4.fromValues(palette.color2[0] / 255, palette.color2[1] / 255, palette.color2[2] / 255, 1),
-    controls.frequency,
-    time);
-      }
-      if (prevShape === 0) {
-                renderer.render(camera, custom, [
-      cube, 
-      // icosphere,
-      // square,
-    ], vec4.fromValues(palette.color1[0] / 255, palette.color1[1] / 255, palette.color1[2] / 255, 1), 
-    vec4.fromValues(palette.color2[0] / 255, palette.color2[1] / 255, palette.color2[2] / 255, 1),
-    controls.frequency,
-    time);
-      }
+    const sceneDrawables = (prevShape === 1) ? [icosphere] : [cube];
+    renderer.renderWithPost(
+      camera,
+      custom,
+      post,
+      sceneDrawables as any,
+      square,
+      vec4.fromValues(palette.color1[0] / 255, palette.color1[1] / 255, palette.color1[2] / 255, 1),
+      vec4.fromValues(palette.color2[0] / 255, palette.color2[1] / 255, palette.color2[2] / 255, 1),
+      controls.frequency,
+      time
+    );
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

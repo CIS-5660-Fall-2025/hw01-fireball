@@ -258,8 +258,8 @@ void main()
     // factor = mix(factor, (1. - fs_yPos) + 0.5 * fs_Noise, 0.5);
     float factor = (1. - fs_yPos) + 0.5 * fs_Noise;
     factor = clamp(factor, 0.001, 0.999);
-    
-    float layerNum = 10.;
+
+    float layerNum = 9.;
     vec4 diffuseColor = vec4(0.);
     for(float i = 0.; i <= layerNum; ++i) {
       vec4 c = mix(u_Color1, u_Color2, i/layerNum);
