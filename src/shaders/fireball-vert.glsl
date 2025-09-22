@@ -320,7 +320,10 @@ void main()
 
     // modify amp with radial distance in xz
     float radialScale = 1.0 - clamp(length(modelposition.xz) / 1.0, 0.0, 1.0);
-    radialScale = max(expImpulse(1.0 - radialScale, 5.0, 1.0), expImpulse(radialScale, 1.5, 0.1));
+    float inner = expImpulse(1.0 - radialScale, 5.0, 1.2);
+    inner = pow(inner, 1.2);
+    float outer = expImpulse(radialScale, 1.5, 0.1);
+    radialScale = max(inner, outer);
 
     modelposition.y += mix(0.0, noise, yFactor) * amp * radialScale;
     // modelposition.xz *= 0.2 - u + 1.0;
