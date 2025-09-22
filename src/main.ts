@@ -31,31 +31,7 @@ const fireballDefaults = {
   velocity: {x: 1.0, y: -4.5, z: -0.6},
 };
 
-let gui: DAT.GUI; // Declare gui variable in global scope
-
-function resetFireball() {
-  // Copy default values into the live controls object
-  controls.u_ShellColor = fireballDefaults.shellColor.slice();
-  controls.u_FallSpeed = fireballDefaults.fallSpeed;
-  controls.u_TailLength = fireballDefaults.tailLength;
-
-  // For nested objects, copy property by property
-  controls.u_FireballVelocity.x = fireballDefaults.velocity.x;
-  controls.u_FireballVelocity.y = fireballDefaults.velocity.y;
-  controls.u_FireballVelocity.z = fireballDefaults.velocity.z;
-
-  // IMPORTANT: Refresh the GUI to show the new values
-  if (gui) {
-    for (let i in gui.__controllers) {
-      gui.__controllers[i].updateDisplay();
-    }
-    for (let folderName in gui.__folders) {
-      for (let i in gui.__folders[folderName].__controllers) {
-        gui.__folders[folderName].__controllers[i].updateDisplay();
-      }
-    }
-  }
-}
+let gui: DAT.GUI;
 
 let square: Square;
 let innerFireball: Icosphere;
@@ -68,6 +44,74 @@ let prevFireballVel: Array<number> = [controls.u_FireballVelocity.x, controls.u_
 let prevTailLength: number = controls.u_TailLength;
 let prevFallSpeed: number = controls.u_FallSpeed;
 let skyTexture: WebGLTexture
+
+// Forward declarations for shader programs
+let inner: ShaderProgram;
+let outter: ShaderProgram;
+let sky: ShaderProgram;
+
+function updateUniforms() {
+  // Update Shell Color
+  if (controls.u_ShellColor.some((v,i) => v !== prevShellColor[i])) {
+    prevShellColor = controls.u_ShellColor.slice();
+    const colorVec = vec4.fromValues(
+      controls.u_ShellColor[0] / 255.0,
+      controls.u_ShellColor[1] / 255.0,
+      controls.u_ShellColor[2] / 255.0,
+      controls.u_ShellColor[3]
+    );
+    inner.setGeometryColor(colorVec);
+    outter.setGeometryColor(colorVec);
+  }
+
+  // Update Tail Length
+  if (controls.u_TailLength !== prevTailLength) {
+    prevTailLength = controls.u_TailLength;
+    inner.setTailLength(controls.u_TailLength);
+  }
+
+  // Update Fall Speed
+  if (controls.u_FallSpeed !== prevFallSpeed) {
+    prevFallSpeed = controls.u_FallSpeed;
+    sky.setFallSpeed(controls.u_FallSpeed);
+  }
+
+  // Update Fireball Velocity
+  let currentFireballVel = [controls.u_FireballVelocity.x, controls.u_FireballVelocity.y, controls.u_FireballVelocity.z];
+  if (currentFireballVel.some((v,i) => v !== prevFireballVel[i])) {
+    prevFireballVel = currentFireballVel.slice();
+    const velVec = vec3.fromValues(
+      controls.u_FireballVelocity.x,
+      controls.u_FireballVelocity.y,
+      controls.u_FireballVelocity.z
+    );
+    inner.setFireballVel(velVec);
+    outter.setFireballVel(velVec);
+  }
+}
+
+function resetFireball() {
+  controls.u_ShellColor = fireballDefaults.shellColor.slice();
+  controls.u_FallSpeed = fireballDefaults.fallSpeed;
+  controls.u_TailLength = fireballDefaults.tailLength;
+
+  controls.u_FireballVelocity.x = fireballDefaults.velocity.x;
+  controls.u_FireballVelocity.y = fireballDefaults.velocity.y;
+  controls.u_FireballVelocity.z = fireballDefaults.velocity.z;
+
+  if (gui) {
+    for (let i in gui.__controllers) {
+      gui.__controllers[i].updateDisplay();
+    }
+    for (let folderName in gui.__folders) {
+      for (let i in gui.__folders[folderName].__controllers) {
+        gui.__folders[folderName].__controllers[i].updateDisplay();
+      }
+    }
+  }
+
+  updateUniforms();
+}
 
 function loadScene() {
   innerFireball = new Icosphere(vec3.fromValues(0, 0, 0), 0.85, 6);
@@ -112,9 +156,6 @@ function main() {
   const velocityFolder = gui.addFolder('Fireball Velocity');
   gui.add(controls, 'Reset Fireball');
 
-
-  // resetFireball function now moved to global scope above
-
   // Add a slider for each component
   velocityFolder.add(controls.u_FireballVelocity, 'x', -10.0, 10.0).step(0.1);
   velocityFolder.add(controls.u_FireballVelocity, 'y', -10.0, 10.0).step(0.1);
@@ -148,17 +189,17 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
   
-  const outter = new ShaderProgram([
+  outter = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
 
-  const inner = new ShaderProgram([
+  inner = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/inner-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/inner-frag.glsl')),
   ]);
 
-  const sky = new ShaderProgram([
+  sky = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/sky-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/sky-frag.glsl')),
   ]);
@@ -217,46 +258,7 @@ function main() {
       controls.u_ShellColor[3]
     ));
 
-    if(controls.u_ShellColor.some((v,i) => v != prevShellColor[i]))
-    {
-      prevShellColor = controls.u_ShellColor.slice();
-      outter.setGeometryColor(vec4.fromValues(
-        controls.u_ShellColor[0] / 255.0,
-        controls.u_ShellColor[1] / 255.0,
-        controls.u_ShellColor[2] / 255.0,
-        controls.u_ShellColor[3]
-      ));
-    }
-
-    if(controls.u_TailLength!= prevTailLength){
-      inner.setTailLength(controls.u_TailLength);
-    }
-
-    if(controls.u_FallSpeed != prevFallSpeed){
-      sky.setFallSpeed(controls.u_FallSpeed);
-    }
-    
-
-    // Check if fireball velocity has changed
-    let currentFireballVel = [controls.u_FireballVelocity.x, controls.u_FireballVelocity.y, controls.u_FireballVelocity.z];
-    if(currentFireballVel.some((v,i) => v != prevFireballVel[i]))
-    {
-      prevFireballVel = currentFireballVel.slice();
-      inner.setFireballVel(vec3.fromValues(
-        controls.u_FireballVelocity.x,
-        controls.u_FireballVelocity.y,
-        controls.u_FireballVelocity.z,
-      ));
-      outter.setFireballVel(vec3.fromValues(
-        controls.u_FireballVelocity.x,
-        controls.u_FireballVelocity.y,
-        controls.u_FireballVelocity.z,
-      ));
-    }
-    // renderer.render(camera, flat, [
-    //   square,
-    // ], time);
-
+    updateUniforms();
 
     sky.use();
     sky.setTime(time);
