@@ -15,6 +15,9 @@ uniform vec4 u_Color; // The color with which to render this instance of geometr
 uniform float u_Time;
 uniform vec3 u_CamPos;
 uniform vec3 u_CamTarget;
+uniform float u_Volatility;
+uniform float u_Cartooniness;
+uniform float u_Temperature;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -27,6 +30,9 @@ in float fs_TopDisp;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
+
+#define PI 3.141592
+#define TAU 6.283185
 
 // From toolbox slides
 float bias(float b, float t) {
@@ -48,6 +54,10 @@ float cubicPulse(float c, float w, float x) {
     return 1. - x*x*(3.-2.*x);
 }
 //
+
+vec2 toPolar(vec2 cart) {
+    return vec2(length(cart), mod(atan(cart.y, cart.x), TAU));
+}
 
 float hash31(vec3 p3) // From https://www.shadertoy.com/view/4djSRW
 {
@@ -145,11 +155,14 @@ vec3 posterizeHotnessToCol(float hotness, float reps) {
     //const float reps = 5.;
     interpo = floor(interpo*reps)/reps;
 
-    return mix(colors[ind], colors[ind+1], interpo);
+    vec3 col = mix(colors[ind], colors[ind+1], interpo);
+    col = mix(col.zyx, col, u_Temperature);
+
+    return col;
 }
 
 vec3 postMixHotToCol(float hotness) {
-    return .6*posterizeHotnessToCol(hotness, 5.) + 0.4*posterizeHotnessToCol(hotness, 50.);
+    return u_Cartooniness*1.2*posterizeHotnessToCol(hotness, 5.) + (1.-u_Cartooniness)*1.6*posterizeHotnessToCol(hotness, 50.);
 }
 
 vec3 fresnel(vec3 p, vec3 norm) {
@@ -160,11 +173,11 @@ vec3 fresnel(vec3 p, vec3 norm) {
 
 vec3 smoothYGlowLayer(vec3 p) {
     float val = 0.5*smoothstep(2., -1., p.y);
-    return 1.5*val*vec3(1.4,0.5,0.1);
+    return 1.5*val*mix(vec3(0.1, 0.5, 1.4), vec3(1.4,0.5,0.1), u_Temperature);
 }
 
 float noiseGlow(vec3 p) {
-    return smoothstep(0.37, 0.6, fbm(p*.18+u_Time*vec3(0.,-.3,0.))) * smoothstep(1.75, .75, p.y);
+    return smoothstep(0.37, 0.6, fbm(p*mix(.32, .18, u_Volatility)+mix(0.2, 1., u_Volatility)*u_Time*vec3(0.,-.3,0.))) * smoothstep(1.75, .75, p.y);
 }
 
 float getHeatFlicker() {
@@ -182,6 +195,15 @@ float getTotalLightFlicker() {
     return .9+.12*sin(u_Time*8.);
 }
 
+float stripeGlow(vec3 p) {
+    vec2 polar = toPolar(p.xz);
+    polar.y += 0.4*u_Time + 0.1*sin(p.y*4.);
+    float glow = max(0., cos(5.*polar.y)+.2+.2*sin((p.y-u_Time)*5.));
+    glow *= glow;
+
+    return 0.2*glow*smoothstep(2., 1.5, p.y);
+}
+
 void main()
 {
     vec3 p = fs_Pos.xyz;
@@ -189,7 +211,10 @@ void main()
 
     float heatFlicker = getHeatFlicker();
 
-    vec3 col = getTotalLightFlicker()*postMixHotToCol(noiseGlow(p)+getHotness(p, fs_Disp, norm, fs_TopDisp)+heatFlicker) + smoothYGlowLayer(p) + fresnel(p, norm);
+    vec3 col = getTotalLightFlicker()*postMixHotToCol(stripeGlow(p)+noiseGlow(p)+getHotness(p, fs_Disp, norm, fs_TopDisp)+heatFlicker) + smoothYGlowLayer(p) + fresnel(p, norm);
+
+    col = tanh(col)*1.5;
+    col *= vec3(1.,0.9,0.7);
 
     out_Col = vec4(col, 1.);
 }

@@ -34,6 +34,9 @@ class ShaderProgram {
   unifCamTarget: WebGLUniformLocation;
   unifCamUp: WebGLUniformLocation;
   unifAspect: WebGLUniformLocation;
+  unifVolatility: WebGLUniformLocation;
+  unifCartooniness: WebGLUniformLocation;
+  unifTemperature: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -58,6 +61,9 @@ class ShaderProgram {
     this.unifCamTarget       = gl.getUniformLocation(this.prog, "u_CamTarget");
     this.unifCamUp       = gl.getUniformLocation(this.prog, "u_CamUp");
     this.unifAspect       = gl.getUniformLocation(this.prog, "u_Aspect");
+    this.unifVolatility       = gl.getUniformLocation(this.prog, "u_Volatility");
+    this.unifCartooniness       = gl.getUniformLocation(this.prog, "u_Cartooniness");
+    this.unifTemperature       = gl.getUniformLocation(this.prog, "u_Temperature");
 
   }
 
@@ -93,6 +99,19 @@ class ShaderProgram {
     this.use();
     if (this.unifColor !== -1) {
       gl.uniform4fv(this.unifColor, color);
+    }
+  }
+
+  setFireParams(volatility: number, cartooniness: number, temperature : number) {
+    this.use();
+    if (this.unifVolatility !== -1) {
+      gl.uniform1f(this.unifVolatility, volatility);
+    }
+    if (this.unifCartooniness !== -1) {
+      gl.uniform1f(this.unifCartooniness, cartooniness);
+    }
+    if(this.unifTemperature !== -1) {
+      gl.uniform1f(this.unifTemperature, temperature);
     }
   }
 

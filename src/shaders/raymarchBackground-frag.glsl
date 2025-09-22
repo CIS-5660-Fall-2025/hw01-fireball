@@ -9,6 +9,10 @@ uniform vec3 u_CamPos;
 uniform vec3 u_CamTarget;
 uniform vec3 u_CamUp;
 
+uniform float u_Volatility;
+uniform float u_Cartooniness;
+uniform float u_Temperature;
+
 in vec2 fs_Pos;
 out vec4 out_Col;
 
@@ -99,7 +103,7 @@ float sdScene(vec3 p) {
     float s = 1.-polar.x;
     
     for(float n = 5.; n<10.; n += 1.)
-        s -= 5.*max(0.,sampleNoise(p*0.5)-.1)*.0125*abs(dot(cos(20.*vec3(rot(p.xy, 31.34*n), p.z)*n*0.3), vec3(1.))) / n;
+        s -= u_Volatility*5.*max(0.,sampleNoise(p*0.5*u_Volatility)-.1)*.0125*abs(dot(cos(20.*vec3(rot(p.xy, 31.34*n), p.z)*n*0.3), vec3(1.))) / n;
     
     return s;
 }
@@ -140,7 +144,7 @@ vec3 render(vec2 p)
     
     v *= v;
     // https://www.shadertoy.com/view/WXVGRG# energy to color mapping
-    vec3 outCol = pow(vec3(v), vec3(1, 1.5, 12))*6.;
+    vec3 outCol = pow(vec3(v), mix(vec3(12, 1.5, 1), vec3(1, 1.5, 12), u_Temperature))*6.;
     
     outCol = tanh(outCol)*1.5;
     outCol *= vec3(1.,0.9,0.7);

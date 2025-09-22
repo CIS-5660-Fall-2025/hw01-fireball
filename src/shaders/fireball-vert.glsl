@@ -20,6 +20,9 @@ uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformati
                             // but in HW3 you'll have to generate one yourself
 
 uniform float u_Time;
+uniform float u_Volatility;
+uniform float u_Cartooniness;
+uniform float u_Temperature;
 
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
@@ -33,6 +36,7 @@ out vec4 fs_Col;            // The color of each vertex. This is implicitly pass
 out vec4 fs_Pos;
 out float fs_Disp;
 out float fs_TopDisp;
+
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
@@ -152,9 +156,15 @@ float getTopNoise(vec3 p) {
     return 5.*bias(0.1, fbm(1.5*(p+0.4*u_Time*vec3(-.1,-1.,.2))))*mult;
 }
 
+vec2 getTrigShift(vec3 p) {
+    float y = 2.*(p.y-u_Time);
+
+    return 0.1*vec2(cos(y*1.3+58.)+0.5*cos(y*2.5), sin(y*1.2+32.)+.4*cos(y*2.3));
+}
+
 vec3 modify(vec3 p) {
     vec3 sp = p;
-    sp += 1.5*u_Time * vec3(0.4, -0.8, 0.45);
+    sp += mix(0.5, 1.5, u_Volatility)*u_Time * vec3(0.4, -0.8, 0.45);
 
     float heatOffset = 2.*trigNoise(sp)+fbm(sp);
     fs_Disp = heatOffset;
@@ -162,15 +172,19 @@ vec3 modify(vec3 p) {
     float topOffset = topOffset(p);
 
     float finalOffset = heatOffset + topOffset;// + topNoise;
+    finalOffset *= u_Volatility;
     p += 0.2*finalOffset*fs_Nor.xyz;
 
     float topNoise = getTopNoise(p);
+    topNoise *= u_Volatility;
     float upOffset = topNoise;
     fs_TopDisp = topNoise;
     p.y += 0.2*upOffset;
     
     float stretchSqueeze = getStretchSqueeze(p);
     p.xz *= 1.+stretchSqueeze;
+
+    p.xz += getTrigShift(p);
     return p;
 }
 

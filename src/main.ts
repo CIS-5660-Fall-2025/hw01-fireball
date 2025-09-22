@@ -14,7 +14,11 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  'Color' : 0xffffff
+  'Color' : 0xffffff,
+  'Volatility' : 1,
+  'Cartooniness' : 0.5,
+  'Temperature' : 1.0,
+  'Reset To Default': resetToDefault
 };
 
 let icosphere: Icosphere;
@@ -36,6 +40,14 @@ function loadScene() {
   cube.create();
 }
 
+function resetToDefault() {
+  controls.tesselations = 5;
+  controls.Color = 0xffffff;
+  controls.Volatility = 1;
+  controls.Cartooniness = 0.5;
+  controls.Temperature = 1.0;
+}
+
 function main() {
   // Initial display for framerate
   const stats = Stats();
@@ -50,6 +62,10 @@ function main() {
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
   gui.addColor(controls, 'Color')
+  gui.add(controls, 'Volatility', 0.6, 1.5);
+  gui.add(controls, 'Cartooniness', 0, 1);
+  gui.add(controls, 'Temperature', 0, 1);
+  gui.add(controls, 'Reset To Default');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -117,12 +133,12 @@ function main() {
       let col : vec4 = vec4.fromValues(((prevColor >> 16)*1.0)/255.0, (((prevColor >> 8) % 256)*1.0)/255.0, (((prevColor) % 256)*1.0)/255.0, 1);
       currColor = col;
     }
-    renderer.render(camera, passthroughShader, [square], currColor, timeSinceStart*0.5, aspect);
+    renderer.render(camera, passthroughShader, [square], currColor, controls.Volatility, controls.Cartooniness, controls.Temperature, timeSinceStart*0.5, aspect);
     renderer.render(camera, fireBallShader, [
       icosphere,
       //square,
       //cube,
-    ], currColor, timeSinceStart, aspect);
+    ], currColor, controls.Volatility, controls.Cartooniness, controls.Temperature, timeSinceStart, aspect);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
