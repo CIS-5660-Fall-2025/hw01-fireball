@@ -139,44 +139,7 @@ void main()
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.
 
-        // Stylized watercolor look (single-pass, no new uniforms)
-        // 1) Paper noise (screen-space) and granulation
-        vec2 paperUV = gl_FragCoord.xy * 0.003;
-        float paperNoiseLo = noise3D(vec3(paperUV, 0.0)) * 0.5 + 0.5;         // [0,1]
-        float paperNoiseHi = noise3D(vec3(paperUV * 2.37 + fs_Noise, 1.73)) * 0.5 + 0.5; // [0,1]
-        float granulation = mix(0.90, 1.10, paperNoiseHi);                    // subtle pigment granulation
-
-        // 2) Posterize tones with jittered thresholds for watercolor edges
-        float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-        float levels = 5.0;                                                   // number of watercolor tonal bands
-        float jitter = (paperNoiseLo - 0.5) * 0.15;                           // wobbly watercolor boundary
-        float qLum = floor(clamp(lum + jitter, 0.0, 1.0) * (levels - 1.0)) / (levels - 1.0);
-        vec3 rampColor = mix(u_Color1.rgb, u_Color2.rgb, qLum);
-        vec3 colorPoster = mix(diffuseColor.rgb, rampColor, 0.65);
-
-        // 3) Edge darkening (ink-like) using normal and depth derivatives
-        vec3 N = normalize(fs_Nor.xyz);
-        float nx = length(dFdx(N));
-        float ny = length(dFdy(N));
-        float geoEdge = clamp((nx + ny) * 3.0, 0.0, 1.0);
-        float dzdx = dFdx(fs_vPos.z);
-        float dzdy = dFdy(fs_vPos.z);
-        float depthEdge = clamp(length(vec2(dzdx, dzdy)) * 3.0, 0.0, 1.0);
-        float edge = smoothstep(0.2, 0.7, max(geoEdge, depthEdge));
-
-        // 4) Pigment pooling (darken in low-gradient, low elevation regions)
-        float gradLum = length(vec2(dFdx(lum), dFdy(lum)));
-        float poolMask = (1.0 - clamp(gradLum * 5.0, 0.0, 1.0)) * (1.0 - fs_yPos);
-
-        // 5) Apply paper modulation, granulation, pooling, and edges
-        vec3 colorWC = colorPoster;
-        colorWC *= granulation;                                               // grainy pigment
-        colorWC *= mix(0.96, 1.04, paperNoiseLo);                             // paper modulation
-        colorWC *= 1.0 - 0.25 * poolMask;                                     // pigment pooling
-        vec3 ink = vec3(0.08, 0.06, 0.05);
-        colorWC = mix(colorWC, ink, edge * 0.85);                             // inked contours
-
-        // Final color
-        out_Col = vec4(colorWC, diffuseColor.a);
+        // Compute final shaded color
+        out_Col = vec4(diffuseColor.rgb, diffuseColor.a);
         // out_Col = vec4(0.7804, 0.2471, 0.2471, 1.0);
 }
