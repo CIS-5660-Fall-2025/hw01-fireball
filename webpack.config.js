@@ -6,7 +6,9 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
-    publicPath: '/',
+    publicPath: process.env.PUBLIC_PATH || '/',
+	
+	clean:true,
   },
   module: {
     rules: [
@@ -18,6 +20,24 @@ module.exports = {
       {
         test: /\.glsl$/,
         loader: 'webpack-glsl-loader'
+      },
+{
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[path][name].[ext]',
+              type: 'asset/resource',
+              generator: {
+                filename: 'textures/[name][ext]',
+                publicPath: process.env.NODE_ENV === 'production' 
+                  ? '/hw01-fireball/textures/' 
+                  : '/textures/'
+              }
+            },
+          },
+        ],
       },
     ]
   },

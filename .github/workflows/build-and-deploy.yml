@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: "15.x"
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -27,6 +27,7 @@ jobs:
         run: |
           npm ci
           export NODE_ENV=production
+          export PUBLIC_PATH=/hw01-fireball/
           npm run-script build
           touch dist/.nojekyll
       - name: Deploy 🚀
