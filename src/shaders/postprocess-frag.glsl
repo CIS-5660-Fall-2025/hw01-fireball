@@ -252,32 +252,29 @@ void main() {
 
     // Sample scene color
     vec3 sceneCol = texture(u_SceneTex, uv).rgb;
-    // float grain = perlinNoise(vec3(uv, 1.) * 100., uint(213));
-    // grain = perlinNoise(vec3(grain), uint(12));
-    // sceneCol += 0.1 * vec3(grain);
-    // out_Col = vec4(sceneCol, 1.0);
 
-    // Watercolor paper grain: use fbm of uv mapped to 3D with time scroll
+    // Grain
     vec3 p = vec3(uv * u_Resolution / 20., 1.0);
-    p.x *= 0.4;
-    float grain = perlinNoise(p, 1, 8, 0.5, 2.0, uint(232));
-    // grain = 0.5 * grain + 0.5; // to [0,1]
+    // p.x *= 0.4;         // stretch on x to make it more paper looking
+    float grain = perlinNoise(p * vec3(0.5, 1., 1.), 1, 8, 0.5, 2.0, uint(232));
 
-    // lambert
+    // Lambert with fake normal
     vec3 normal = heightToNormal(grain, 0.6);
     vec3 lightVec = vec3(0.5, 0.5, 0.5);
     lightVec.x *= cos(u_Time * 0.005);
     lightVec.y *= sin(u_Time * 0.005);
-
     float diffuseTerm = dot(normalize(normal), normalize(lightVec));
     diffuseTerm = clamp(diffuseTerm, 0.001, 0.999);
     float ambientTerm = 0.1;
     float lightIntensity = diffuseTerm + ambientTerm; 
     lightIntensity = clamp(lightIntensity, 0.001, 0.999);
 
-    // grain *= uv.x;
-    // sceneCol += 0.1 * grain;
-    out_Col = vec4(vec3(sceneCol * diffuseTerm), 1.0);
+    // Ink Splashes
+    float s1 = perlinNoise(p * 0.1, 1, 1, 0.5, 2.0, uint(432));
+    s1 = perlinNoise(vec3(s1), 1, 1, 0.5, 2.0, uint(13));
+
+    out_Col = vec4(s1, s1, s1, 1.0);
+    // out_Col = vec4(vec3(sceneCol * diffuseTerm), 1.0);
     // out_Col = vec4(sceneCol, 1.0);
 }
 
