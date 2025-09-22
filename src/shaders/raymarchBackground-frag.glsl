@@ -12,6 +12,7 @@ uniform vec3 u_CamUp;
 uniform float u_Volatility;
 uniform float u_Cartooniness;
 uniform float u_Temperature;
+uniform float u_FireballBrightness;
 
 in vec2 fs_Pos;
 out vec4 out_Col;
@@ -139,7 +140,7 @@ vec3 render(vec2 p)
         
         d += 0.25*s;
         v +=.5*.007/(4.*s+e*0.25);
-        v += .001/(e2);
+        v += u_FireballBrightness*.001/(e2);
     }
     
     v *= v;
