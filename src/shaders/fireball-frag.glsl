@@ -15,6 +15,7 @@ uniform vec4 u_Color1; // The color with which to render this instance of geomet
 uniform vec4 u_Color2;
 uniform float u_Freq;
 uniform float u_Time;
+uniform float u_LayerNum;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -259,11 +260,11 @@ void main()
     float factor = (1. - fs_yPos) + 0.5 * fs_Noise;
     factor = clamp(factor, 0.001, 0.999);
 
-    float layerNum = 9.;
+    // float layerNum = 9.;
     vec4 diffuseColor = vec4(0.);
-    for(float i = 0.; i <= layerNum; ++i) {
-      vec4 c = mix(u_Color1, u_Color2, i/layerNum);
-      diffuseColor = mix(diffuseColor, c, step(i/layerNum, factor));
+    for(float i = 0.; i <= u_LayerNum; ++i) {
+      vec4 c = mix(u_Color1, u_Color2, i/u_LayerNum);
+      diffuseColor = mix(diffuseColor, c, step(i/u_LayerNum, factor));
     }
 
     // diffuseColor = mix(u_Color1, u_Color2, factor);

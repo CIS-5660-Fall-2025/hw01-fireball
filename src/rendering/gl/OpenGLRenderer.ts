@@ -26,24 +26,24 @@ class OpenGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 
-  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, color1: vec4, color2: vec4, freq: number, time: number) {
-    let model = mat4.create();
-    let viewProj = mat4.create();
-    // let color = vec4.fromValues(1, 1, 1, 1);
+  // render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, color1: vec4, color2: vec4, freq: number, time: number) {
+  //   let model = mat4.create();
+  //   let viewProj = mat4.create();
+  //   // let color = vec4.fromValues(1, 1, 1, 1);
 
-    mat4.identity(model);
-    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
-    prog.setModelMatrix(model);
-    prog.setViewProjMatrix(viewProj);
-    prog.setGeometryColor1(color1);
-    prog.setGeometryColor2(color2);
-    prog.setFreq(freq);
-    prog.setTime(time);
+  //   mat4.identity(model);
+  //   mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+  //   prog.setModelMatrix(model);
+  //   prog.setViewProjMatrix(viewProj);
+  //   prog.setGeometryColor1(color1);
+  //   prog.setGeometryColor2(color2);
+  //   prog.setFreq(freq);
+  //   prog.setTime(time);
 
-    for (let drawable of drawables) {
-      prog.draw(drawable);
-    }
-  }
+  //   for (let drawable of drawables) {
+  //     prog.draw(drawable);
+  //   }
+  // }
 
   private setupFramebuffer() {
     // Clean up previous resources
@@ -89,7 +89,7 @@ class OpenGLRenderer {
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
   }
 
-  renderWithPost(camera: Camera, sceneProg: ShaderProgram, postProg: ShaderProgram, drawables: Array<Drawable>, screenQuad: Drawable, color1: vec4, color2: vec4, freq: number, time: number) {
+  renderWithPost(camera: Camera, sceneProg: ShaderProgram, postProg: ShaderProgram, drawables: Array<Drawable>, screenQuad: Drawable, color1: vec4, color2: vec4, freq: number, time: number, layerNum: number) {
     // Renderto framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -105,6 +105,7 @@ class OpenGLRenderer {
     sceneProg.setGeometryColor2(color2);
     sceneProg.setFreq(freq);
     sceneProg.setTime(time);
+    sceneProg.setLayerNum(layerNum);
     for (let drawable of drawables) {
       sceneProg.draw(drawable);
     }

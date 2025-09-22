@@ -16,7 +16,8 @@ const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   frequency: 1.0,
-  shape: 1
+  shape: 1,
+  layerNum: 10.0
 };
 
 let icosphere: Icosphere;
@@ -24,6 +25,7 @@ let square: Square;
 let cube: Cube;
 let prevTesselations: number = 7;
 let time: number = 0.0;
+let layerNum: number = 10.0;
 let prevShape: number = 0;
 
 function loadScene() {
@@ -45,8 +47,9 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   var palette = {
-    color1: [255, 180, 125, 1],
-    color2: [57, 15, 255, 1]
+    color1: [255, 234, 221, 1],
+    color2: [16, 52, 134, 1], 
+    color3: [249.9, 246.075, 237.15, 1]
   };
 
 
@@ -56,8 +59,10 @@ function main() {
   gui.add(controls, 'Load Scene');
   gui.addColor(palette, 'color1');
   gui.addColor(palette, 'color2');
+  gui.addColor(palette, 'color3');
   gui.add(controls, 'frequency', 0.1, 5.0).step(0.1);
   gui.add(controls, 'shape', 0, 1).step(1);
+  gui.add(controls, 'layerNum', 1.0, 20.0).step(1.0);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -75,7 +80,8 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 7), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.98, 0.965, 0.93, 1);
+  renderer.setClearColor(palette.color3[0] / 255, palette.color3[1] / 255, palette.color3[2] / 255, 1);
+  // renderer.setClearColor(0.9, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
 
   const custom = new ShaderProgram([
@@ -90,6 +96,7 @@ function main() {
 
   // This function will be called every frame
   function tick() {
+    renderer.setClearColor(palette.color3[0] / 255, palette.color3[1] / 255, palette.color3[2] / 255, 1);
     time += 1.0;
     camera.update();
     stats.begin();
@@ -102,10 +109,11 @@ function main() {
       icosphere.create();
     }
 
-
-
     if(controls.shape != prevShape) {
       prevShape = controls.shape;
+    }
+    if(controls.layerNum != layerNum) {
+      layerNum = controls.layerNum;
     }
 
     const sceneDrawables = (prevShape === 1) ? [icosphere] : [cube];
@@ -118,7 +126,8 @@ function main() {
       vec4.fromValues(palette.color1[0] / 255, palette.color1[1] / 255, palette.color1[2] / 255, 1),
       vec4.fromValues(palette.color2[0] / 255, palette.color2[1] / 255, palette.color2[2] / 255, 1),
       controls.frequency,
-      time
+      time,
+      layerNum
     );
     stats.end();
 

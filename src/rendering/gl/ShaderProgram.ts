@@ -32,6 +32,7 @@ class ShaderProgram {
   unifColor2: WebGLUniformLocation;
   unifFreq: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+  unifLayerNum: WebGLUniformLocation;
   unifSceneTex: WebGLUniformLocation;
   unifResolution: WebGLUniformLocation;
 
@@ -56,6 +57,7 @@ class ShaderProgram {
     this.unifColor2      = gl.getUniformLocation(this.prog, "u_Color2");
     this.unifFreq        = gl.getUniformLocation(this.prog, "u_Freq");
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
+    this.unifLayerNum   = gl.getUniformLocation(this.prog, "u_LayerNum");
     this.unifSceneTex   = gl.getUniformLocation(this.prog, "u_SceneTex");
     this.unifResolution = gl.getUniformLocation(this.prog, "u_Resolution");
   }
@@ -113,6 +115,13 @@ class ShaderProgram {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, time);
+    }
+  }
+
+  setLayerNum(layerNum: number) {
+    this.use();
+    if (this.unifLayerNum !== -1) {
+      gl.uniform1f(this.unifLayerNum, layerNum);
     }
   }
 

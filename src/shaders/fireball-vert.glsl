@@ -322,7 +322,7 @@ void main()
     float radialScale = 1.0 - clamp(length(modelposition.xz) / 1.0, 0.0, 1.0);
     float inner = expImpulse(1.0 - radialScale, 5.25, 1.2);
     inner = pow(inner, 1.2);
-    float outer = expImpulse(radialScale, 1.5, 0.1);
+    float outer = expImpulse(radialScale, 2.0, 0.1);
     radialScale = max(inner, outer);
 
     modelposition.y += mix(0.0, noise, yFactor) * amp * radialScale;
