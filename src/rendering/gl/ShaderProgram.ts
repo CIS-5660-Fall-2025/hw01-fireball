@@ -28,17 +28,26 @@ class ShaderProgram {
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
-  unifColor: WebGLUniformLocation;
+  unifShellColor: WebGLUniformLocation;
+
+
 
   unifNoiseAmount: WebGLUniformLocation;
   unifNoiseSpeed: WebGLUniformLocation;
   unifNoiseScale: WebGLUniformLocation;
+
+  unifFireballVel: WebGLUniformLocation;
 
   unifRef: WebGLUniformLocation;
   unifEye: WebGLUniformLocation;
   unifUp: WebGLUniformLocation;
   unifDimensions: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+
+  unifSkyTexture: WebGLUniformLocation;
+
+  unifResolution: WebGLUniformLocation;
+  unifTexResolution: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -62,18 +71,51 @@ class ShaderProgram {
     this.unifNoiseSpeed  = gl.getUniformLocation(this.prog, "u_NoiseSpeed");
     this.unifNoiseScale  = gl.getUniformLocation(this.prog, "u_NoiseScale");
 
+    this.unifFireballVel = gl.getUniformLocation(this.prog, "u_FireballVelocity");
+
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
     this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
-    this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
+    this.unifShellColor = gl.getUniformLocation(this.prog, "u_ShellColor");
+
+    this.unifSkyTexture = gl.getUniformLocation(this.prog, "u_SkyTexture");
+
+    this.unifResolution = gl.getUniformLocation(this.prog, "u_Resolution");
+    this.unifTexResolution = gl.getUniformLocation(this.prog, "u_TexResolution");
   }
 
   use() {
     if (activeProgram !== this.prog) {
       gl.useProgram(this.prog);
       activeProgram = this.prog;
+    }
+  }
+
+  setTextureSampler(texture: WebGLTexture, textureUnit: number) {
+    this.use();
+    
+    if (this.unifSkyTexture !== -1) {
+      gl.activeTexture(gl.TEXTURE0 + textureUnit);
+      
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      
+      gl.uniform1i(this.unifSkyTexture, textureUnit);
+    }
+  }
+
+  setResolution(width: number, height: number) {
+    this.use();
+    if (this.unifResolution !== -1) {
+      gl.uniform2f(this.unifResolution, width, height);
+    }
+  }
+
+  setTexResolution(width: number, height: number) {
+    this.use();
+    if (this.unifTexResolution !== -1) {
+      gl.uniform2f(this.unifTexResolution, width, height);
     }
   }
 
@@ -98,10 +140,17 @@ class ShaderProgram {
     }
   }
 
+  setFireballVel(vel: vec3) {
+    this.use();
+    if (this.unifFireballVel !== -1) {
+      gl.uniform3fv(this.unifFireballVel, vel);
+    }
+  }
+
   setGeometryColor(color: vec4) {
     this.use();
-    if (this.unifColor !== -1) {
-      gl.uniform4fv(this.unifColor, color);
+    if (this.unifShellColor !== -1) {
+      gl.uniform4fv(this.unifShellColor, color);
     }
   }
 
@@ -165,7 +214,7 @@ class ShaderProgram {
       gl.enableVertexAttribArray(this.attrNor);
       gl.vertexAttribPointer(this.attrNor, 4, gl.FLOAT, false, 0, 0);
     }
-    
+
     d.bindIdx()
 
     gl.drawElements(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0);

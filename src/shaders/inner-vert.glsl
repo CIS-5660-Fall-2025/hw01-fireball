@@ -28,6 +28,8 @@ uniform float u_NoiseAmount; // How strong the surface displacement is
 uniform float u_NoiseSpeed;  // How fast the surface churns
 uniform float u_NoiseScale;  // The size/frequency of the noise pattern
 
+uniform vec3 u_FireballVelocity;
+
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
 in vec4 vs_Nor;             // The array of vertex normals passed to the shader
@@ -101,25 +103,33 @@ float snoise(vec3 v) {
 }
 
 vec3 getDisplacement(vec3 pos) {
-    float tLength = 1.; // Using temp values from your code
-    vec3 velocityDir = normalize(vec3(1.0, 0.0, 1.0));
+    float u_TailNoiseAmount = 0.05;
+    float tLength = 1.0;
+    vec3 velDir = normalize(u_FireballVelocity);
 
-    // Tail calculation
-    float dotProduct = dot(normalize(pos.xyz), velocityDir);
-    fs_PullFactor = pow(max(0.0, -dotProduct), 8.0);
-
+    float dotProduct = dot(normalize(pos.xyz), velDir);
+    fs_PullFactor = pow(max(0.0, -dotProduct), 4.0);
     fs_ShapeFactor = (dotProduct + 1.0) * 0.5;
 
     float flicker = 1.0 + sin(u_Time * u_NoiseSpeed + pos.y * 5.0) * 0.1;
-    vec3 tailDisplacement = - velocityDir * fs_PullFactor * tLength * flicker;
-
-    // Noise calculation
-    vec3 noiseInput = pos.xyz * 0.6   + u_Time * u_NoiseSpeed * 1.0;
+    vec3 tailDisplacement = - velDir * fs_PullFactor * tLength * flicker;
+    
+    vec3 noiseInput = pos.xyz * 0.6 + u_Time * u_NoiseSpeed * 1.0;
     float noiseValue = snoise(noiseInput);
     vec3 noiseDisplacement = normalize(pos.xyz) * noiseValue * u_NoiseAmount;
 
-    vec3 totalDisplacement = tailDisplacement + noiseDisplacement;
+    vec3 tailNoiseInput = pos.xyz * 4.0 + u_Time * u_NoiseSpeed * 2.5;
+    float tailNoiseValue = snoise(tailNoiseInput);
 
+
+    vec3 tailTurbulence = normalize(pos.xyz) * tailNoiseValue * u_TailNoiseAmount;
+
+    vec3 totalDisplacement = tailDisplacement + noiseDisplacement + tailTurbulence * fs_PullFactor;
+
+    float maxDisplacementLength = 2.5;
+    if(length(totalDisplacement) > maxDisplacementLength) {
+        totalDisplacement = normalize(totalDisplacement) * maxDisplacementLength;
+    }
 
     return totalDisplacement;
 }

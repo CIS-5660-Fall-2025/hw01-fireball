@@ -25,8 +25,7 @@ in vec4 fs_Col;
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 
-// 3D Simplex Noise by Inigo Quilez
-// https://www.shadertoy.com/view/XsX3zS
+// by Stefan Gustavson (https://github.com/stegu/webgl-noise)
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -86,24 +85,18 @@ void main()
     // Define color gradient
     vec3 colorCore = vec3(0.8, 0.2, 0.0);   // Bright yellow-white
     vec3 colorMid  = vec3(1.0, 0.5, 0.0);   // Orange
-    vec3 colorTail = vec3(1.0, 1.0, 0.7);   // Dark reddish-orange
+    vec3 colorTail = vec3(0.7, 0.6, 0.7);   // Dark reddish-orange
 
-    vec3 finalColor = mix(colorCore, colorMid, smoothstep(0.0, 0.4, fs_ShapeFactor));
+    vec3 finalColor = mix(colorCore, colorMid, smoothstep(0.0, 0.6, fs_ShapeFactor));
 
     float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
     float lightIntensity = clamp( diffuseTerm + 0.4, 0.5, 1.0);
 
-    float noiseValue = (snoise(fs_Pos.xyz * 2.0) + 1.0) * 0.5;
-    // if (pow(fs_PullFactor, 2.0) > noiseValue) {
-    //     discard; // This command stops the pixel from being drawn.
-    // }
 
-
-
-    float headGlowFactor = smoothstep(0.85, 1.0, fs_ShapeFactor);
+    float headGlowFactor = smoothstep(0.6, 1.0, fs_ShapeFactor);
     lightIntensity = mix(lightIntensity, 1.0, headGlowFactor);
     
-    finalColor = mix(finalColor, colorTail, smoothstep(0.7, 1.0, fs_ShapeFactor));
+    finalColor = mix(finalColor, colorTail, smoothstep(0.5, 1.0, fs_ShapeFactor));
 
     // Set the final output color
     out_Col = vec4(finalColor * lightIntensity, 1.0);

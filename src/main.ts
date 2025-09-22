@@ -8,7 +8,7 @@ import Icosphere from './geometry/Icosphere';
 
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
-import {setGL} from './globals';
+import {loadTexture, setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 
 // Define an object with application parameters and button callbacks
@@ -16,21 +16,31 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  u_Color: [255.0, 255.0, 254.0, 1.0]
+  u_ShellColor: [255.0, 120.0, 0.0, 1.0],
+  u_FireballVelocity: {x: 1.0, y: -4.5, z: -0.6},
+
+
+
+  fallSpeed: 4,
 };
 
 let square: Square;
 let innerFireball: Icosphere;
+let outerFireball: Icosphere;
 
 let time: number = 0;
 let prevTesselations: number = 5;
-let prevColor: Array<number> = controls.u_Color.slice();
-
+let prevShellColor: Array<number> = controls.u_ShellColor.slice();
+let prevFireballVel: Array<number> = [controls.u_FireballVelocity.x, controls.u_FireballVelocity.y, controls.u_FireballVelocity.z];
+let prevFallSpeed: number = controls.fallSpeed;
+let skyTexture: WebGLTexture
 
 function loadScene() {
-  innerFireball = new Icosphere(vec3.fromValues(0, 0, 0), 1, 6);
+  innerFireball = new Icosphere(vec3.fromValues(0, 0, 0), 0.85, 6);
   innerFireball.create();
 
+  outerFireball = new Icosphere(vec3.fromValues(0.0, -0.15, 0), 1.1, 6);
+  outerFireball.create();
   // square = new Square(vec3.fromValues(0, 0, 0));
   // square.create();
   //time = 0;
@@ -63,7 +73,15 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
-  gui.addColor(controls, 'u_Color');
+  gui.addColor(controls, 'u_ShellColor');
+const velocityFolder = gui.addFolder('Fireball Velocity');
+
+// Add a slider for each component
+velocityFolder.add(controls.u_FireballVelocity, 'x', -10.0, 10.0).step(0.1);
+velocityFolder.add(controls.u_FireballVelocity, 'y', -10.0, 10.0).step(0.1);
+velocityFolder.add(controls.u_FireballVelocity, 'z', -10.0, 10.0).step(0.1);
+
+velocityFolder.open();
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -81,7 +99,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(164.0 / 255.0, 233.0 / 255.0, 1.0, 1);
+  renderer.setClearColor(0.0 / 0.0, 0.0 / 255.0, 0.0, 1);
 
   gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   gl.enable(gl.DEPTH_TEST);
@@ -91,7 +109,7 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
   
-  const lambert = new ShaderProgram([
+  const outter = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
@@ -101,19 +119,41 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/inner-frag.glsl')),
   ]);
 
+  const sky = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/sky-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/sky-frag.glsl')),
+  ]);
 
-  lambert.setGeometryColor(vec4.fromValues(
-    controls.u_Color[0] / 255.0,
-    controls.u_Color[1] / 255.0,
-    controls.u_Color[2] / 255.0,
-    controls.u_Color[3]
+  
+  skyTexture = loadTexture('asset/bg_sky.png');
+
+
+  inner.setFireballVel(vec3.fromValues(
+    controls.u_FireballVelocity.x,
+    controls.u_FireballVelocity.y,
+    controls.u_FireballVelocity.z,
   ));
 
+  outter.setFireballVel(vec3.fromValues(
+    controls.u_FireballVelocity.x,
+    controls.u_FireballVelocity.y,
+    controls.u_FireballVelocity.z,
+  ));
+
+  outter.setGeometryColor(vec4.fromValues(
+    controls.u_ShellColor[0] / 255.0,
+    controls.u_ShellColor[1] / 255.0,
+    controls.u_ShellColor[2] / 255.0,
+    controls.u_ShellColor[3]
+  ));
+
+  outter
+
   inner.setGeometryColor(vec4.fromValues(
-    controls.u_Color[0] / 255.0,
-    controls.u_Color[1] / 255.0,
-    controls.u_Color[2] / 255.0,
-    controls.u_Color[3]
+    controls.u_ShellColor[0] / 255.0,
+    controls.u_ShellColor[1] / 255.0,
+    controls.u_ShellColor[2] / 255.0,
+    controls.u_ShellColor[3]
   ));
 
   function processKeyPresses() {
@@ -130,32 +170,64 @@ function main() {
     processKeyPresses();
 
     inner.setGeometryColor(vec4.fromValues(
-      controls.u_Color[0] / 255.0,
-      controls.u_Color[1] / 255.0,
-      controls.u_Color[2] / 255.0,
-      controls.u_Color[3]
+      controls.u_ShellColor[0] / 255.0,
+      controls.u_ShellColor[1] / 255.0,
+      controls.u_ShellColor[2] / 255.0,
+      controls.u_ShellColor[3]
     ));
 
-    if(controls.u_Color.some((v,i) => v != prevColor[i]))
+    if(controls.u_ShellColor.some((v,i) => v != prevShellColor[i]))
     {
-      prevColor = controls.u_Color.slice();
-      inner.setGeometryColor(vec4.fromValues(
-        controls.u_Color[0] / 255.0,
-        controls.u_Color[1] / 255.0,
-        controls.u_Color[2] / 255.0,
-        controls.u_Color[3]
+      prevShellColor = controls.u_ShellColor.slice();
+      outter.setGeometryColor(vec4.fromValues(
+        controls.u_ShellColor[0] / 255.0,
+        controls.u_ShellColor[1] / 255.0,
+        controls.u_ShellColor[2] / 255.0,
+        controls.u_ShellColor[3]
       ));
+    }
 
+    
+
+    // Check if fireball velocity has changed
+    let currentFireballVel = [controls.u_FireballVelocity.x, controls.u_FireballVelocity.y, controls.u_FireballVelocity.z];
+    if(currentFireballVel.some((v,i) => v != prevFireballVel[i]))
+    {
+      prevFireballVel = currentFireballVel.slice();
+      inner.setFireballVel(vec3.fromValues(
+        controls.u_FireballVelocity.x,
+        controls.u_FireballVelocity.y,
+        controls.u_FireballVelocity.z,
+      ));
+      outter.setFireballVel(vec3.fromValues(
+        controls.u_FireballVelocity.x,
+        controls.u_FireballVelocity.y,
+        controls.u_FireballVelocity.z,
+      ));
     }
     // renderer.render(camera, flat, [
     //   square,
     // ], time);
+
+
+    sky.use();
+    sky.setTime(time);
+    sky.setTextureSampler(skyTexture, 0);
+    sky.setResolution(gl.canvas.width, gl.canvas.height);
+    sky.setTexResolution(1024.0, 1024.0);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     
 
     renderer.render(camera, inner, [
       innerFireball,
+      //outerFireball
     ], time);
 
+    renderer.render(camera, outter, [
+      outerFireball,
+      //outerFireball
+    ], time);
 
     time++;
     stats.end();
