@@ -30,6 +30,8 @@ uniform float u_NoiseScale;  // The size/frequency of the noise pattern
 
 uniform vec3 u_FireballVelocity;
 
+uniform float u_TailLength;
+
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
 in vec4 vs_Nor;             // The array of vertex normals passed to the shader
@@ -104,7 +106,7 @@ float snoise(vec3 v) {
 
 vec3 getDisplacement(vec3 pos) {
     float u_TailNoiseAmount = 0.05;
-    float tLength = 1.0;
+    float tLength = u_TailLength;
     vec3 velDir = normalize(u_FireballVelocity);
 
     float dotProduct = dot(normalize(pos.xyz), velDir);

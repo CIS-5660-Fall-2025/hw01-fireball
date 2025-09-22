@@ -18,10 +18,8 @@ const controls = {
   'Load Scene': loadScene, // A function pointer, essentially
   u_ShellColor: [255.0, 120.0, 0.0, 1.0],
   u_FireballVelocity: {x: 1.0, y: -4.5, z: -0.6},
-
-
-
-  fallSpeed: 4,
+  u_TailLength: 1.1,
+  u_FallSpeed: 4,
 };
 
 let square: Square;
@@ -32,7 +30,8 @@ let time: number = 0;
 let prevTesselations: number = 5;
 let prevShellColor: Array<number> = controls.u_ShellColor.slice();
 let prevFireballVel: Array<number> = [controls.u_FireballVelocity.x, controls.u_FireballVelocity.y, controls.u_FireballVelocity.z];
-let prevFallSpeed: number = controls.fallSpeed;
+let prevTailLength: number = controls.u_TailLength;
+let prevFallSpeed: number = controls.u_FallSpeed;
 let skyTexture: WebGLTexture
 
 function loadScene() {
@@ -74,6 +73,8 @@ function main() {
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
   gui.addColor(controls, 'u_ShellColor');
+  gui.add(controls, 'u_FallSpeed');
+  gui.add(controls, 'u_TailLength');
 const velocityFolder = gui.addFolder('Fireball Velocity');
 
 // Add a slider for each component
@@ -134,6 +135,10 @@ velocityFolder.open();
     controls.u_FireballVelocity.z,
   ));
 
+  inner.setTailLength(controls.u_TailLength);
+
+  sky.setFallSpeed(controls.u_FallSpeed);
+
   outter.setFireballVel(vec3.fromValues(
     controls.u_FireballVelocity.x,
     controls.u_FireballVelocity.y,
@@ -146,8 +151,6 @@ velocityFolder.open();
     controls.u_ShellColor[2] / 255.0,
     controls.u_ShellColor[3]
   ));
-
-  outter
 
   inner.setGeometryColor(vec4.fromValues(
     controls.u_ShellColor[0] / 255.0,
@@ -187,6 +190,13 @@ velocityFolder.open();
       ));
     }
 
+    if(controls.u_TailLength!= prevTailLength){
+      inner.setTailLength(controls.u_TailLength);
+    }
+
+    if(controls.u_FallSpeed != prevFallSpeed){
+      sky.setFallSpeed(controls.u_FallSpeed);
+    }
     
 
     // Check if fireball velocity has changed

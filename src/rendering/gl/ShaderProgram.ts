@@ -49,6 +49,9 @@ class ShaderProgram {
   unifResolution: WebGLUniformLocation;
   unifTexResolution: WebGLUniformLocation;
 
+  unifTailLength: WebGLUniformLocation;
+  unifFallSpeed : WebGLUniformLocation;
+
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
 
@@ -84,6 +87,9 @@ class ShaderProgram {
 
     this.unifResolution = gl.getUniformLocation(this.prog, "u_Resolution");
     this.unifTexResolution = gl.getUniformLocation(this.prog, "u_TexResolution");
+  
+    this.unifTailLength = gl.getUniformLocation(this.prog, "u_TailLength");
+    this.unifFallSpeed = gl.getUniformLocation(this.prog, "u_FallSpeed");
   }
 
   use() {
@@ -199,6 +205,20 @@ class ShaderProgram {
     this.use();
     if(this.unifNoiseScale !== -1) {
       gl.uniform1f(this.unifNoiseScale, s);
+    }
+  }
+
+  setTailLength(l: number){
+    this.use();
+    if(this.unifTailLength !== -1) {
+      gl.uniform1f(this.unifTailLength, l);
+    }
+  }
+  
+  setFallSpeed(s: number){
+    this.use();
+    if(this.unifFallSpeed !== -1) {
+      gl.uniform1f(this.unifFallSpeed, s);
     }
   }
 
