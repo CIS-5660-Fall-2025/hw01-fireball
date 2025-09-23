@@ -19,6 +19,7 @@ in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec4 fs_Pos;
+in float fs_Displacement;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -83,24 +84,44 @@ float perlin(vec3 pos) {
     ) * 0.5 + 0.5;
 }
 
+vec3[] quasiblackbody = vec3[7](
+    vec3(0., 0., 0.),
+    vec3(1., 0., 0.),
+    vec3(1., 0.9, 0.1),
+    vec3(1., 1., 1.),
+    vec3(0.2, 0.9, 1.),
+    vec3(0., 0.3, 1.),
+    vec3(0., 0., 0.4)
+);
+
+float sineEase(float t) {
+    return 1. - (cos(t * 3.1415926) + 1.) / 2.;
+}
+
 void main()
 {
     // Material base color (before shading)
-        vec4 diffuseColor = u_Color;
+    // vec4 diffuseColor = u_Color;
 
-        diffuseColor += vec4(perlin(fs_Pos.xyz * 16.) * vec3(1., 0.4, 0.1), 1.);
+    vec3 col1 = quasiblackbody[clamp(int(floor(fs_Displacement)), 0, 6)];
+    vec3 col2 = quasiblackbody[clamp(int(ceil(fs_Displacement)), 0, 6)];
+    vec3 col = mix(col1, col2, sineEase(fract(fs_Displacement)));
 
-        // Calculate the diffuse term for Lambert shading
-        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-        // Avoid negative lighting values
-        // diffuseTerm = clamp(diffuseTerm, 0, 1);
+    out_Col = vec4(col, 1.); 
 
-        float ambientTerm = 0.2;
+    // // diffuseColor += vec4(perlin(fs_Pos.xyz * 16.) * vec3(1., 0.4, 0.1), 1.);
 
-        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
-                                                            //to simulate ambient lighting. This ensures that faces that are not
-                                                            //lit by our point light are not completely black.
+    // // Calculate the diffuse term for Lambert shading
+    // float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
+    // // Avoid negative lighting values
+    // // diffuseTerm = clamp(diffuseTerm, 0, 1);
 
-        // Compute final shaded color
-        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+    // float ambientTerm = 0.2;
+
+    // float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
+    //                                                     //to simulate ambient lighting. This ensures that faces that are not
+    //                                                     //lit by our point light are not completely black.
+
+    // // Compute final shaded color
+    // out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
 }
