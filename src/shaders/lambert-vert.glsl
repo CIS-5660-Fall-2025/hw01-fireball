@@ -127,27 +127,27 @@ void main()
     modelposition += fs_Displacement * vs_Nor;
 
     float noise1 = perlin(modelposition.xyz + vec3(sin(u_Time / 5000.), cos(u_Time / 5000.), 0.) * 3.); 
-    float sine1 = sin(u_Time / ((cos(u_Time / 1234. + 10.) + 8.) * 300.));
+    float sine1 = sin((cos(u_Time / 1234. + 10.) + 8.) * 3.);
     float disp1 = 0.25 * (gain(noise1 * sine1 * sine1, 0.8) * 2. - 1.);
 
     float noise2 = perlin((modelposition.xyz + vec3(0., cos(u_Time / 10000. + 1.), sin(u_Time / 10000.)) * 5.) * 2. + vec3(717., 913., 203.));
-    float sine2 = sin(u_Time / ((cos(u_Time / 4321. + 4.) + 16.) * 200.) + 1.);
+    float sine2 = sin((cos(u_Time / 4321. + 4.) + 16.) * 2. + 1.);
     float disp2 = 0.125 * (gain(noise2 * sine2 * sine2, 0.7) * 2. - 1.);
 
     float noise3 = perlin((modelposition.xyz + vec3(cos(u_Time / 22944. + 2.), 0., -sin(u_Time / 22944. + 3.)) * 2.) * 4. + vec3(-503., -213., 119.));
-    float sine3 = sin(u_Time / ((cos(u_Time / 500. + 1.) + 24.) * 100.) + 2.);
+    float sine3 = sin((cos(u_Time / 500. + 1.) + 24.) * 1. + 2.);
     float disp3 = 0.0625 * (gain(noise3 * sine3 * sine3, 0.65) * 2. - 1.);
 
     float noise4 = perlin((modelposition.xyz + vec3(cos(u_Time / 14099.), sin(u_Time / 14099. + 1.), 0.) * 10.) * 8. + vec3(123., -243., 949.));
-    float sine4 = sin(u_Time / ((cos(u_Time / 250. + 3.) + 32.) * 50.) + 3.);
+    float sine4 = sin((cos(u_Time / 250. + 3.) + 32.) * 0.5 + 3.);
     float disp4 = 0.03125 * (gain(noise4 * sine4 * sine4, 0.6) * 2. - 1.);
 
     float noise5 = perlin((modelposition.xyz + vec3(0., -sin(u_Time / 89294. + 12.421), cos(u_Time / 89294. - 12.4)) * 9.) * 16. + vec3(541., 921., -213.));
-    float sine5 = sin(u_Time / ((cos(u_Time / 135. + 9.) + 40.) * 25.) + 4.);
+    float sine5 = sin((cos(u_Time / 135. + 9.) + 40.) * 0.25 + 4.);
     float disp5 = 0.015625 * (gain(noise5 * sine5 * sine5, 0.55) * 2. - 1.);
     
     modelposition += (disp1 + disp2 + disp3 + disp4 + disp5) * vs_Nor;
-    fs_Displacement = (disp1 + disp2 + disp3 + disp4 + disp5 + 0.5) * 6.;
+    fs_Displacement = (disp1 + disp2 + disp3 + disp4 + disp5 + 0.55) * 6.;
 
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies

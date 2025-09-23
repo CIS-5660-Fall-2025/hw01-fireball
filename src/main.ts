@@ -12,19 +12,19 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
-  color: [200, 220, 255],
-  'Load Scene': loadScene, // A function pointer, essentially
+  "hue offset": 0,
+  reset: () => {
+    gui.revert(gui);
+  },
 };
 
 let icosphere: Icosphere;
-let square: Square;
 let prevTesselations: number = 5;
+const gui = new DAT.GUI();
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
 }
 
 function main() {
@@ -37,10 +37,9 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   // Add controls to the gui
-  const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
-  gui.addColor(controls, 'color');
-  gui.add(controls, 'Load Scene');
+  gui.add(controls, "hue offset", 0, 1).step(Number.EPSILON);
+  gui.add(controls, "reset");
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -58,7 +57,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(0.2, 0.2, 0.2, 0);
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
@@ -81,7 +80,7 @@ function main() {
 
     renderer.render(camera, lambert, [
       icosphere,
-    ], [controls.color[0] / 255, controls.color[1] / 255, controls.color[2] / 255, 1], now);
+    ], now, controls["hue offset"]);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

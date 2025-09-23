@@ -11,7 +11,7 @@
 // position, light position, and vertex color.
 precision highp float;
 
-uniform vec4 u_Color; // The color with which to render this instance of geometry.
+uniform float u_HueOffset;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -85,9 +85,9 @@ float perlin(vec3 pos) {
 }
 
 vec3[] quasiblackbody = vec3[7](
-    vec3(0., 0., 0.),
-    vec3(1., 0., 0.),
-    vec3(1., 0.9, 0.1),
+    vec3(0.1, 0., 0.),
+    vec3(0.9, 0.1, 0.),
+    vec3(0.99, 0.9, 0.1),
     vec3(1., 1., 1.),
     vec3(0.2, 0.9, 1.),
     vec3(0., 0.3, 1.),
@@ -98,6 +98,51 @@ float sineEase(float t) {
     return 1. - (cos(t * 3.1415926) + 1.) / 2.;
 }
 
+vec3 hsvshift(vec3 orig, float dh) {
+    float cmax = max(max(orig.r, orig.g), orig.b);
+    float cmin = min(min(orig.r, orig.g), orig.b);
+    float range = cmax - cmin;
+
+    float h = 0.;
+    if (range > 0.) {
+        if (cmax == orig.r) {
+            h = (orig.g - orig.b) / range;
+            if (h < 0.) h += 6.;
+        } else if (cmax == orig.g) {
+            h = (orig.b - orig.r) / range + 2.;
+        } else {
+            h = (orig.r - orig.g) / range + 4.;
+        }
+        h /= 6.;
+    }
+
+    float s = cmax == 0. ? 0. : range / cmax;
+    float v = cmax;
+
+    h = mod(h + dh, 1.);
+
+    float c = v * s;
+    float x = c * (1. - abs(mod(h * 6., 2.) - 1.));
+    float m = v - c;
+
+    vec3 p;
+    float hp = h * 6.;
+    if (hp <= 1.) {
+        p = vec3(c, x, 0.);
+    } else if (hp <= 2.) {
+        p = vec3(x, c, 0.);
+    } else if (hp <= 3.) {
+        p = vec3(0., c, x);
+    } else if (hp <= 4.) {
+        p = vec3(0., x, c);
+    } else if (hp <= 5.) {
+        p = vec3(x, 0., c);
+    } else {
+        p = vec3(c, 0., x);
+    }
+    return p + m;
+}
+
 void main()
 {
     // Material base color (before shading)
@@ -105,7 +150,15 @@ void main()
 
     vec3 col1 = quasiblackbody[clamp(int(floor(fs_Displacement)), 0, 6)];
     vec3 col2 = quasiblackbody[clamp(int(ceil(fs_Displacement)), 0, 6)];
-    vec3 col = mix(col1, col2, sineEase(fract(fs_Displacement)));
+
+    vec3 lincol1 = vec3(pow(col1.r, 1./2.2), pow(col1.g, 1./2.2), pow(col1.b, 1./2.2));
+    vec3 lincol2 = vec3(pow(col2.r, 1./2.2), pow(col2.g, 1./2.2), pow(col2.b, 1./2.2));
+
+    vec3 linInterpCol = mix(lincol1, lincol2, sineEase(fract(fs_Displacement)));
+
+    vec3 interpCol = vec3(pow(linInterpCol.r, 2.2), pow(linInterpCol.g, 2.2), pow(linInterpCol.b, 2.2));
+
+    vec3 col = hsvshift(interpCol, u_HueOffset);
 
     out_Col = vec4(col, 1.); 
 
