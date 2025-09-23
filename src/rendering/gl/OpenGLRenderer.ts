@@ -1,16 +1,15 @@
 import {mat4, vec4} from 'gl-matrix';
 import Drawable from './Drawable';
 import Camera from '../../Camera';
-import {gl} from '../../globals';
 import ShaderProgram from './ShaderProgram';
 
 // In this file, `gl` is accessible because it is imported above
 class OpenGLRenderer {
-  constructor(public canvas: HTMLCanvasElement) {
+  constructor(public canvas: HTMLCanvasElement, public gl: WebGL2RenderingContext) {
   }
 
   setClearColor(r: number, g: number, b: number, a: number) {
-    gl.clearColor(r, g, b, a);
+    this.gl.clearColor(r, g, b, a);
   }
 
   setSize(width: number, height: number) {
@@ -19,7 +18,7 @@ class OpenGLRenderer {
   }
 
   clear() {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   }
 
   render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number, hueOffset: number) {

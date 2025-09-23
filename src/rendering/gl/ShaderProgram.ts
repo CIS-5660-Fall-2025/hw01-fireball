@@ -1,13 +1,12 @@
 import {vec4, mat4} from 'gl-matrix';
 import Drawable from './Drawable';
-import {gl} from '../../globals';
 
 var activeProgram: WebGLProgram = null;
 
 export class Shader {
   shader: WebGLShader;
 
-  constructor(type: number, source: string) {
+  constructor(type: number, source: string, public gl: WebGL2RenderingContext) {
     this.shader = gl.createShader(type);
     gl.shaderSource(this.shader, source);
     gl.compileShader(this.shader);
@@ -31,7 +30,7 @@ class ShaderProgram {
   unifTime: WebGLUniformLocation;
   unifHueOffset: WebGLUniformLocation;
 
-  constructor(shaders: Array<Shader>) {
+  constructor(shaders: Array<Shader>, public gl: WebGL2RenderingContext) {
     this.prog = gl.createProgram();
 
     for (let shader of shaders) {
@@ -54,7 +53,7 @@ class ShaderProgram {
 
   use() {
     if (activeProgram !== this.prog) {
-      gl.useProgram(this.prog);
+      this.gl.useProgram(this.prog);
       activeProgram = this.prog;
     }
   }
@@ -62,35 +61,35 @@ class ShaderProgram {
   setModelMatrix(model: mat4) {
     this.use();
     if (this.unifModel !== -1) {
-      gl.uniformMatrix4fv(this.unifModel, false, model);
+      this.gl.uniformMatrix4fv(this.unifModel, false, model);
     }
 
     if (this.unifModelInvTr !== -1) {
       let modelinvtr: mat4 = mat4.create();
       mat4.transpose(modelinvtr, model);
       mat4.invert(modelinvtr, modelinvtr);
-      gl.uniformMatrix4fv(this.unifModelInvTr, false, modelinvtr);
+      this.gl.uniformMatrix4fv(this.unifModelInvTr, false, modelinvtr);
     }
   }
 
   setViewProjMatrix(vp: mat4) {
     this.use();
     if (this.unifViewProj !== -1) {
-      gl.uniformMatrix4fv(this.unifViewProj, false, vp);
+      this.gl.uniformMatrix4fv(this.unifViewProj, false, vp);
     }
   }
 
   setTime(time: number) {
     this.use();
     if (this.unifTime !== -1) {
-      gl.uniform1f(this.unifTime, time);
+      this.gl.uniform1f(this.unifTime, time);
     }
   }
 
   setHueOffset(offset: number) {
     this.use();
     if (this.unifHueOffset !== -1) {
-      gl.uniform1f(this.unifHueOffset, offset);
+      this.gl.uniform1f(this.unifHueOffset, offset);
     }
   }
 
@@ -98,20 +97,20 @@ class ShaderProgram {
     this.use();
 
     if (this.attrPos != -1 && d.bindPos()) {
-      gl.enableVertexAttribArray(this.attrPos);
-      gl.vertexAttribPointer(this.attrPos, 4, gl.FLOAT, false, 0, 0);
+      this.gl.enableVertexAttribArray(this.attrPos);
+      this.gl.vertexAttribPointer(this.attrPos, 4, this.gl.FLOAT, false, 0, 0);
     }
 
     if (this.attrNor != -1 && d.bindNor()) {
-      gl.enableVertexAttribArray(this.attrNor);
-      gl.vertexAttribPointer(this.attrNor, 4, gl.FLOAT, false, 0, 0);
+      this.gl.enableVertexAttribArray(this.attrNor);
+      this.gl.vertexAttribPointer(this.attrNor, 4, this.gl.FLOAT, false, 0, 0);
     }
 
     d.bindIdx();
-    gl.drawElements(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0);
+    this.gl.drawElements(d.drawMode(), d.elemCount(), this.gl.UNSIGNED_INT, 0);
 
-    if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);
-    if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
+    if (this.attrPos != -1) this.gl.disableVertexAttribArray(this.attrPos);
+    if (this.attrNor != -1) this.gl.disableVertexAttribArray(this.attrNor);
   }
 };
 
