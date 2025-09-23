@@ -21,7 +21,7 @@ class OpenGLRenderer {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   }
 
-  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number, hueOffset: number) {
+  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number, hueOffset: number, nOctaves: number) {
     let model = mat4.create();
     let viewProj = mat4.create();
 
@@ -31,6 +31,7 @@ class OpenGLRenderer {
     prog.setViewProjMatrix(viewProj);
     prog.setTime(time);
     prog.setHueOffset(hueOffset);
+    prog.setNOctaves(nOctaves);
 
     for (let drawable of drawables) {
       prog.draw(drawable);

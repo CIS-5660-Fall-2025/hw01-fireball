@@ -12,6 +12,7 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   "hue offset": 0,
+  "# octaves": 5,
   reset: () => {
     gui.revert(gui);
   },
@@ -39,6 +40,7 @@ function main() {
   // Add controls to the gui
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, "hue offset", 0, 1).step(Number.EPSILON);
+  gui.add(controls, "# octaves", 0, 5).step(1);
   gui.add(controls, "reset");
 
   // get canvas and webgl context
@@ -54,7 +56,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas, gl);
-  renderer.setClearColor(0.2, 0.2, 0.2, 0);
+  renderer.setClearColor(0.2, 0.2, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
@@ -77,7 +79,7 @@ function main() {
 
     renderer.render(camera, lambert, [
       icosphere,
-    ], now, controls["hue offset"]);
+    ], now, controls["hue offset"], controls["# octaves"]);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

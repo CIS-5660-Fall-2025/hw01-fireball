@@ -29,6 +29,7 @@ class ShaderProgram {
   unifViewProj: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifHueOffset: WebGLUniformLocation;
+  unifNOctaves: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>, public gl: WebGL2RenderingContext) {
     this.prog = gl.createProgram();
@@ -49,6 +50,7 @@ class ShaderProgram {
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
     this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
     this.unifHueOffset = gl.getUniformLocation(this.prog, "u_HueOffset");
+    this.unifNOctaves = gl.getUniformLocation(this.prog, "u_NOctaves");
   }
 
   use() {
@@ -90,6 +92,13 @@ class ShaderProgram {
     this.use();
     if (this.unifHueOffset !== -1) {
       this.gl.uniform1f(this.unifHueOffset, offset);
+    }
+  }
+
+  setNOctaves(nOctaves: number) {
+    this.use();
+    if (this.unifNOctaves !== -1) {
+      this.gl.uniform1i(this.unifNOctaves, nOctaves);
     }
   }
 
