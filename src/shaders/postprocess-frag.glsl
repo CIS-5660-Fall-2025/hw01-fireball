@@ -244,6 +244,11 @@ float perlinNoise(vec3 position, int frequency, int octaveCount, float persisten
 }
 
 
+float expImpulse(float x, float k, float gain) {
+  float h = k * x;
+  return h * exp(gain - h);
+}
+
 // fake normal from height map
 // Built-in-derivative version (requires GLSL ES 3.00+)
 vec3 heightToNormal(float h, float strength) {
@@ -278,29 +283,49 @@ void main() {
     // Ink Splashes
 
     float splashNum = 10.;
-    for (float j = 0.; j < splashNum; ++j) {
-        vec2 ps = uv * 2.0 - 1.0;
+    // for (float j = 0.; j < splashNum; ++j) {
+    //     vec2 ps = uv * 2.0 - 1.0;
         
-        float layerNum = 10.;
-        float noiseScale = 1.;
-        float r = length(ps + vec2(random1fr(j + 14321.), random1fr(random1fr(j + 32.))));
-        float v = 0.;
-        ps += vec2(999., 999.);
-        // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
-        for (float i = 0.; i < layerNum; ++i) {
-            ps *= 1.6;
-            float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * 5.0;
-            if (h < 0.09) {
-                v += 1./layerNum; 
-            }
+    //     float layerNum = 10.;
+    //     float noiseScale = 1.;
+    //     float r = length(ps + vec2(random1fr(j + 14321.), random1fr(random1fr(j + 32.))));
+    //     float v = 0.;
+    //     ps += vec2(999., 999.);
+    //     // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
+    //     for (float i = 0.; i < layerNum; ++i) {
+    //         ps *= 1.6;
+    //         float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * 5.0;
+    //         if (h < 0.09) {
+    //             v += 1./layerNum; 
+    //         }
+    //     }
+    //     sceneCol -= vec3(v, v, 0.5 * v);
+    // }
+
+    float pi = 3.14159265;
+    float time = u_Time * 0.0025;
+    float seed = floor(time);
+    vec2 ps = uv * 2.0 - 1.0;
+    
+    float layerNum = 10.;
+    float noiseScale = 1.;
+    float r = length(ps + vec2(random1fr(seed + 14321.), random1fr(random1fr(seed + 32.))));
+    float v = 0.;
+    ps += vec2(999., 999.);
+    // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
+    for (float i = 0.; i < layerNum; ++i) {
+        ps *= 1.6;
+        float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * 5.0;
+        if (h < 0.09) {
+            v += 1./layerNum; 
         }
-        sceneCol -= vec3(v, v, 0.5 * v);
     }
 
-
-    
-    
-    
+    // animate v
+    float animate = mod(time, 1.);
+    animate = expImpulse(animate, 20., 1.);
+    v = mix(0., v, animate);
+    sceneCol -= vec3(v, v, 1. * v);
 
     // out_Col = vec4(v, 0.0, 0.0, 1.0);
 
