@@ -1,6 +1,6 @@
 import {vec3, vec4} from 'gl-matrix';
 const Stats = require('stats-js');
-import * as DAT from 'dat.gui';
+import * as dat from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
@@ -147,7 +147,7 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   // Add controls to the gui
-  const gui = new DAT.GUI();
+  const gui = new dat.GUI();
   gui.add(controls, 'Load Scene');
 
   gui.add(controls, 'shellHeight', 0, 5).step(0.01).name('Shell Height');
