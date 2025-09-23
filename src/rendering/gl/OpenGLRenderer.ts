@@ -91,8 +91,8 @@ class OpenGLRenderer {
 
   renderWithPost(camera: Camera, sceneProg: ShaderProgram, postProg: ShaderProgram, 
     drawables: Array<Drawable>, screenQuad: Drawable, 
-    color1: vec4, color2: vec4, splashColor: vec4, splashCount: number,
-    splashScaleVar: number,
+    color1: vec4, color2: vec4, splashColor: vec4, splashCount: number, splashScaleVar: number,
+    innerExp: number, outerExp: number, dispGain: number,
     freq: number, time: number, layerNum: number) {
     // Renderto framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
@@ -107,6 +107,9 @@ class OpenGLRenderer {
     sceneProg.setViewProjMatrix(viewProj);
     sceneProg.setGeometryColor1(color1);
     sceneProg.setGeometryColor2(color2);
+    sceneProg.setInnerExp(innerExp);
+    sceneProg.setOuterExp(outerExp);
+    sceneProg.setDispGain(dispGain),
     sceneProg.setFreq(freq);
     sceneProg.setTime(time);
     sceneProg.setLayerNum(layerNum);

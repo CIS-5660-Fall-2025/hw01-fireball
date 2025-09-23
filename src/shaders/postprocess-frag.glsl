@@ -287,6 +287,7 @@ void main() {
     sceneCol *= diffuseTerm;
     // Ink Splashes
 
+    uv.x *= u_Resolution.x / u_Resolution.y;
     float pi = 3.14159265;
     float time = u_Time * 0.001;
 

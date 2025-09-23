@@ -1,6 +1,6 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
-#
+### Credits
 Inspiration drawn from 
 https://www.shadertoy.com/view/lt2BRm
 
@@ -8,7 +8,15 @@ took some noise functions from Adam's shadertoy account
 and also a 3D perlin noise from:
 https://www.shadertoy.com/view/slB3z3
 
-Set up the post-process frame buffer with some help from llm...hopefully thats ok...( beacuse I wanted to spend more time on actual shader coding)
+took impulse function from IQ
+
+### Description
+- **Fireball (vert + frag)**: The vertex shader is driven by a domain wrapped 3D Perlin Noise that samples the vertex position, then I modified it with a function that combines two impulse functions at each end of 0 and 1. This way I can control the inner and outer shape with `innerExponent` and `outerExponent`, then tune the overall displacement with `dispGain` and of course adjust the frequency `frequency`). In the fragment shader, colors are a stylized ramp between `u_Color1` and `u_Color2`, split into `layerNum` color bands.
+
+- **Ink Post-Process**: Procedurally generated ink patterns by layering perlin noise by doing fbm, with each layer having a radial mask driven by the length of the uv vector. Then applied an square wave by flooring the time, this way the ink holds its shape for a bit, then by modding the time I can animate the opacity, then apply a impulse curve for a more reallistic ink drop animation. Ink color can be controlled with `u_SplashColor`, but note that because it is a subtraction based on the existing frame buffer rgb value, the perceived ink color may be different from what's shown in the GUI. GUI also give controls of number of splats and their size variance.
+
+- **Paper Post-Process**: Done by generating a height map from noise, making a fake normal map with with dFdx/dFdy, and do a lambert shader with the normal to get a papery bump.
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.

@@ -31,13 +31,19 @@ class ShaderProgram {
   unifColor1: WebGLUniformLocation;
   unifColor2: WebGLUniformLocation;
 
+  // Splash
   unifSplashColor: WebGLUniformLocation;
   unifSplashCount: WebGLUniformLocation;
   unifSplashScaleVar: WebGLUniformLocation;
 
+  // Fireball
   unifFreq: WebGLUniformLocation;
-  unifTime: WebGLUniformLocation;
   unifLayerNum: WebGLUniformLocation;
+  unifInnerExp: WebGLUniformLocation;
+  unifOuterExp: WebGLUniformLocation;
+  unifDispGain: WebGLUniformLocation;
+
+  unifTime: WebGLUniformLocation;
   unifSceneTex: WebGLUniformLocation;
   unifResolution: WebGLUniformLocation;
 
@@ -60,12 +66,20 @@ class ShaderProgram {
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
     this.unifColor1      = gl.getUniformLocation(this.prog, "u_Color1");
     this.unifColor2      = gl.getUniformLocation(this.prog, "u_Color2");
+
+    // Splash
     this.unifSplashColor      = gl.getUniformLocation(this.prog, "u_SplashColor");
     this.unifSplashCount  = gl.getUniformLocation(this.prog, "u_SplashCount");
     this.unifSplashScaleVar = gl.getUniformLocation(this.prog, 'u_SplashScaleVar');
+
+    // Fireball
+    this.unifInnerExp   = gl.getUniformLocation(this.prog, "u_InnerExp");
+    this.unifOuterExp   = gl.getUniformLocation(this.prog, "u_OuterExp");
+    this.unifLayerNum   = gl.getUniformLocation(this.prog, "u_LayerNum");
+    this.unifDispGain   = gl.getUniformLocation(this.prog, "u_DispGain");
+
     this.unifFreq        = gl.getUniformLocation(this.prog, "u_Freq");
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
-    this.unifLayerNum   = gl.getUniformLocation(this.prog, "u_LayerNum");
     this.unifSceneTex   = gl.getUniformLocation(this.prog, "u_SceneTex");
     this.unifResolution = gl.getUniformLocation(this.prog, "u_Resolution");
   }
@@ -130,6 +144,27 @@ class ShaderProgram {
     this.use();
     if (this.unifSplashScaleVar !== -1) {
       gl.uniform1f(this.unifSplashScaleVar, splashScaleVar);
+    }
+  }
+
+  setInnerExp(innerExp: number) {
+    this.use();
+    if (this.unifInnerExp !== -1) {
+      gl.uniform1f(this.unifInnerExp, innerExp);
+    }
+  }
+  
+  setOuterExp(outerExp: number) {
+    this.use();
+    if (this.unifOuterExp !== -1) {
+      gl.uniform1f(this.unifOuterExp, outerExp);
+    }
+  }
+
+  setDispGain(dispGain: number) {
+    this.use();
+    if (this.unifDispGain !== -1) {
+      gl.uniform1f(this.unifDispGain, dispGain);
     }
   }
 

@@ -14,9 +14,12 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
-  'Load Scene': loadScene, // A function pointer, essentially
+  'Reset Scene': loadScene, // A function pointer, essentially
   frequency: 1.0,
-  shape: 1,
+  innerExponent: 5.25,
+  outerExponent: 2.0,
+  dispGain: 1.0,
+  // shape: 1,
   layerNum: 10.0,
   splashCount: 40.0,
   splashScaleVar: 2.0
@@ -27,9 +30,17 @@ let square: Square;
 let cube: Cube;
 let prevTesselations: number = 7;
 let time: number = 0.0;
-let layerNum: number = 10.0;
-let prevShape: number = 0;
-let splashCount: number = 40.0;
+// let layerNum: number = 10.0;
+// let prevShape: number = 0;
+let savedGui: dat.GUI;
+// let splashCount: number = 40.0;
+
+var palette = {
+  color1: [255, 234, 221, 1],
+  color2: [16, 52, 134, 1], 
+  paperColor: [249.9, 246.075, 237.15, 1],
+  splashColor: [18, 24, 52, 1]
+};
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 0.2, controls.tesselations);
@@ -38,6 +49,25 @@ function loadScene() {
   square.create();
   cube = new Cube(vec3.fromValues(0,0,0));
   cube.create();
+  resetScene();
+}
+
+function resetScene() {
+  savedGui.__controllers.forEach(c => c.updateDisplay());
+  controls.tesselations = 5;
+  controls.frequency = 2.0;
+  controls.innerExponent = 5.25;
+  controls.outerExponent = 2.0;
+  controls.dispGain = 1.0;
+  controls.layerNum = 10.0;
+  controls.splashCount = 40.0;
+  controls.splashScaleVar = 2.0;
+  prevTesselations = 7;
+
+  palette.color1 = [255, 234, 221, 1];
+  palette.color2 = [16, 52, 134, 1];
+  palette.paperColor = [249.9, 246.075, 237.15, 1];
+  palette.splashColor = [18, 24, 52, 1];
 }
 
 function main() {
@@ -49,33 +79,31 @@ function main() {
   stats.domElement.style.top = '0px';
   document.body.appendChild(stats.domElement);
 
-  var palette = {
-    color1: [255, 234, 221, 1],
-    color2: [16, 52, 134, 1], 
-    color3: [249.9, 246.075, 237.15, 1],
-    splashColor: [18, 24, 52, 1]
-  };
-
-
-
-
   // Add controls to the gui
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
-  gui.add(controls, 'Load Scene');
+  gui.add(controls, 'Reset Scene');
   gui.addColor(palette, 'color1');
   gui.addColor(palette, 'color2');
-  gui.addColor(palette, 'color3');
+  gui.addColor(palette, 'paperColor');
   gui.addColor(palette, 'splashColor');
-  gui.add(controls, 'frequency', 0.1, 5.0).step(0.1);
-  gui.add(controls, 'shape', 0, 1).step(1);
-  gui.add(controls, 'layerNum', 1.0, 20.0).step(1.0);
+  // gui.add(controls, 'frequency', 0.1, 5.0).step(0.1);
+  // gui.add(controls, 'shape', 0, 1).step(1);
+  // gui.add(controls, 'layerNum', 1.0, 20.0).step(1.0);
+  savedGui = gui;
 
   // Splash controls folder
   const splashControlsFolder = gui.addFolder("Splash Controls");
   splashControlsFolder.add(controls, 'splashCount', 0, 80).step(1);
   splashControlsFolder.add(controls, 'splashScaleVar', 0.0, 5.0).step(0.2);
 
+  // Fireball controls folder
+  const fireballControlsFolder = gui.addFolder("Fireball Controls");
+  fireballControlsFolder.add(controls, 'innerExponent', 0.0, 10.0).step(0.2);
+  fireballControlsFolder.add(controls, 'outerExponent', 0.0, 10.0).step(0.2);
+  fireballControlsFolder.add(controls, 'frequency', 0.1, 5.0).step(0.1);
+  fireballControlsFolder.add(controls, 'layerNum', 1.0, 20.0).step(1.0);
+  fireballControlsFolder.add(controls, 'dispGain', 0.0, 2.0).step(0.1);
 
 
   // get canvas and webgl context
@@ -94,7 +122,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 7), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(palette.color3[0] / 255, palette.color3[1] / 255, palette.color3[2] / 255, 1);
+  renderer.setClearColor(palette.paperColor[0] / 255, palette.paperColor[1] / 255, palette.paperColor[2] / 255, 1);
   // renderer.setClearColor(0.9, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
 
@@ -110,7 +138,7 @@ function main() {
 
   // This function will be called every frame
   function tick() {
-    renderer.setClearColor(palette.color3[0] / 255, palette.color3[1] / 255, palette.color3[2] / 255, 1);
+    renderer.setClearColor(palette.paperColor[0] / 255, palette.paperColor[1] / 255, palette.paperColor[2] / 255, 1);
     time += 1.0;
     camera.update();
     stats.begin();
@@ -123,12 +151,7 @@ function main() {
       icosphere.create();
     }
 
-    if(controls.shape != prevShape) {
-      prevShape = controls.shape;
-    }
-
-
-    const sceneDrawables = (prevShape === 1) ? [icosphere] : [cube];
+    const sceneDrawables = [icosphere];
     renderer.renderWithPost(
       camera,
       custom,
@@ -140,6 +163,9 @@ function main() {
       vec4.fromValues(palette.splashColor[0] / 255, palette.splashColor[1] / 255, palette.splashColor[2] / 255, 1),
       controls.splashCount,
       controls.splashScaleVar,
+      controls.innerExponent,
+      controls.outerExponent,
+      controls.dispGain,
       controls.frequency,
       time,
       controls.layerNum

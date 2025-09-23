@@ -20,6 +20,10 @@ uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformati
                             // but in HW3 you'll have to generate one yourself
 
 uniform float u_Time;
+uniform float u_InnerExp;
+uniform float u_OuterExp;
+uniform float u_Freq;
+uniform float u_DispGain;
 
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
@@ -297,7 +301,7 @@ void main()
     fs_vPos = modelposition;
     float time = u_Time * 0.01;
 
-    float amp = 3.;
+    float amp = 3. * u_DispGain;
     float yFactor = smoothstep(0.0, 0.9, 0.5 * (modelposition.y + 1.0));
 
     int freq1 = 3;
@@ -314,15 +318,15 @@ void main()
     vec3 noiseUV = vec3(noiseUV1, noiseUV2, noiseUV3);
     noiseUV = fit01(noiseUV);
     
-    float noise = perlinNoise(noiseUV * 1.5, uint(12));
+    float noise = perlinNoise(noiseUV * u_Freq, uint(12));
 
     noise = fit01(noise);
 
     // modify amp with radial distance in xz
     float radialScale = 1.0 - clamp(length(modelposition.xz) / 1.0, 0.0, 1.0);
-    float inner = expImpulse(1.0 - radialScale, 5.25, 1.2);
+    float inner = expImpulse(1.0 - radialScale, u_InnerExp, 1.2);
     inner = pow(inner, 1.2);
-    float outer = expImpulse(radialScale, 2.0, 0.1);
+    float outer = expImpulse(radialScale, u_OuterExp, 0.1);
     radialScale = max(inner, outer);
 
     modelposition.y += mix(0.0, noise, yFactor) * amp * radialScale;
