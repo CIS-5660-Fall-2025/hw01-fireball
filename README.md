@@ -13,6 +13,8 @@ Screenshots
 --------------------------
 ![](scr1.png)
 ![](scr2.png)
+<img width="1915" height="966" alt="image" src="https://github.com/user-attachments/assets/3e35f5b3-1be2-4b76-97a9-d7d2025bc0f4" />
+
 
 ## Objective
 
