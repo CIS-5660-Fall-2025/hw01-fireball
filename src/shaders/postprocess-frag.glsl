@@ -4,6 +4,9 @@ precision highp float;
 uniform sampler2D u_SceneTex;
 uniform vec2 u_Resolution;
 uniform float u_Time;
+uniform vec4 u_Color1; // The color with which to render this instance of geometry.
+uniform vec4 u_Color2;
+uniform vec4 u_SplashColor;
 
 in vec2 v_UV;
 out vec4 out_Col;
@@ -282,55 +285,50 @@ void main() {
     sceneCol *= diffuseTerm;
     // Ink Splashes
 
-    float splashNum = 10.;
-    // for (float j = 0.; j < splashNum; ++j) {
-    //     vec2 ps = uv * 2.0 - 1.0;
-        
-    //     float layerNum = 10.;
-    //     float noiseScale = 1.;
-    //     float r = length(ps + vec2(random1fr(j + 14321.), random1fr(random1fr(j + 32.))));
-    //     float v = 0.;
-    //     ps += vec2(999., 999.);
-    //     // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
-    //     for (float i = 0.; i < layerNum; ++i) {
-    //         ps *= 1.6;
-    //         float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * 5.0;
-    //         if (h < 0.09) {
-    //             v += 1./layerNum; 
-    //         }
-    //     }
-    //     sceneCol -= vec3(v, v, 0.5 * v);
-    // }
-
+    float splashNum = 10.;  // REMEMBERTO CHANGE TO 40.
     float pi = 3.14159265;
-    float time = u_Time * 0.0025;
-    float seed = floor(time);
-    vec2 ps = uv * 2.0 - 1.0;
-    
-    float layerNum = 10.;
-    float noiseScale = 1.;
-    float r = length(ps + vec2(random1fr(seed + 14321.), random1fr(random1fr(seed + 32.))));
-    float v = 0.;
-    ps += vec2(999., 999.);
-    // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
-    for (float i = 0.; i < layerNum; ++i) {
-        ps *= 1.6;
-        float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * 5.0;
-        if (h < 0.09) {
-            v += 1./layerNum; 
+    float time = u_Time * 0.001;
+
+    for (float k = 0.; k < splashNum; k++) {
+        time += random1(k);
+        float seed = floor(time);
+        vec2 ps = uv * 2.0 - 1.0;
+        float layerNum = 10.;
+        float noiseScale = 1.;
+        float r = length(ps + vec2(random1fr(seed + k), random1fr(random1fr(seed + k))));
+        // float r = length(ps + vec2(random1fr(seed + k), random1fr(seed + k)));
+        
+        float v = 0.;
+        ps += vec2(999., 999.);
+        // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
+        for (float i = 0.; i < layerNum; ++i) {
+            ps *= 1.6;
+            float radiusRandAmp = 2.;
+            float radius = (5.0 + radiusRandAmp * random1fr(seed));
+            float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * radius;
+            if (h < 0.09) {
+                v += 1./layerNum; 
+            }
         }
+
+        // animate v
+        float animate = mod(time, 1.);
+        animate = expImpulse(animate, 20., 1.);
+        v = mix(0., v, animate);
+        v = clamp(v, 0.0001, 0.9999);
+        // vec3 invColor = vec3(1. - u_Color1.x, 1. -  u_Color1.y, 1. - u_Color1.z);
+        vec3 subtractColor = vec3(v) - u_SplashColor.rgb;
+        subtractColor = clamp(subtractColor, 0.0001, 0.9999);
+        sceneCol = sceneCol - subtractColor;
     }
 
-    // animate v
-    float animate = mod(time, 1.);
-    animate = expImpulse(animate, 20., 1.);
-    v = mix(0., v, animate);
-    sceneCol -= vec3(v, v, 1. * v);
+    
 
     // out_Col = vec4(v, 0.0, 0.0, 1.0);
 
     // out_Col = vec4(vec3(sceneCol * diffuseTerm), 1.0);
     out_Col = vec4(sceneCol, 1.0);
+    // out_Col = u_Color1;
 }
 
 

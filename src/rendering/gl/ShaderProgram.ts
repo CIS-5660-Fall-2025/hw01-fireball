@@ -30,6 +30,7 @@ class ShaderProgram {
   unifViewProj: WebGLUniformLocation;
   unifColor1: WebGLUniformLocation;
   unifColor2: WebGLUniformLocation;
+  unifSplashColor: WebGLUniformLocation;
   unifFreq: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifLayerNum: WebGLUniformLocation;
@@ -55,6 +56,7 @@ class ShaderProgram {
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
     this.unifColor1      = gl.getUniformLocation(this.prog, "u_Color1");
     this.unifColor2      = gl.getUniformLocation(this.prog, "u_Color2");
+    this.unifSplashColor      = gl.getUniformLocation(this.prog, "u_SplashColor");
     this.unifFreq        = gl.getUniformLocation(this.prog, "u_Freq");
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
     this.unifLayerNum   = gl.getUniformLocation(this.prog, "u_LayerNum");
@@ -101,6 +103,13 @@ class ShaderProgram {
     this.use();
     if (this.unifColor2 !== -1) {
       gl.uniform4fv(this.unifColor2, color);
+    }
+  }
+
+  setGeometrySplashColor(color: vec4) {
+    this.use();
+    if (this.unifSplashColor !== -1) {
+      gl.uniform4fv(this.unifSplashColor, color);
     }
   }
 

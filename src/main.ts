@@ -49,7 +49,8 @@ function main() {
   var palette = {
     color1: [255, 234, 221, 1],
     color2: [16, 52, 134, 1], 
-    color3: [249.9, 246.075, 237.15, 1]
+    color3: [249.9, 246.075, 237.15, 1],
+    splashColor: [255, 0, 0, 1]
   };
 
 
@@ -60,6 +61,7 @@ function main() {
   gui.addColor(palette, 'color1');
   gui.addColor(palette, 'color2');
   gui.addColor(palette, 'color3');
+  gui.addColor(palette, 'splashColor');
   gui.add(controls, 'frequency', 0.1, 5.0).step(0.1);
   gui.add(controls, 'shape', 0, 1).step(1);
   gui.add(controls, 'layerNum', 1.0, 20.0).step(1.0);
@@ -125,6 +127,7 @@ function main() {
       square,
       vec4.fromValues(palette.color1[0] / 255, palette.color1[1] / 255, palette.color1[2] / 255, 1),
       vec4.fromValues(palette.color2[0] / 255, palette.color2[1] / 255, palette.color2[2] / 255, 1),
+      vec4.fromValues(palette.splashColor[0] / 255, palette.splashColor[1] / 255, palette.splashColor[2] / 255, 1),
       controls.frequency,
       time,
       layerNum
