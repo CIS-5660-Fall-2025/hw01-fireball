@@ -17,6 +17,11 @@ float random1 (float x) {
         return fract(sin(x) * f);
 }
 
+float random1fr (float x) {
+    float f = 43758.5453123;
+    return 2. * fract(sin(x) * f) - 1.;
+}
+
 float noise1D(float x) {
         float i = floor(x);
         float fr = fract(x);
@@ -261,21 +266,46 @@ void main() {
     // Lambert with fake normal
     vec3 normal = heightToNormal(grain, 0.6);
     vec3 lightVec = vec3(0.5, 0.5, 0.5);
-    lightVec.x *= cos(u_Time * 0.005);
-    lightVec.y *= sin(u_Time * 0.005);
+    // lightVec.x *= cos(u_Time * 0.005);
+    // lightVec.y *= sin(u_Time * 0.005);
     float diffuseTerm = dot(normalize(normal), normalize(lightVec));
     diffuseTerm = clamp(diffuseTerm, 0.001, 0.999);
     float ambientTerm = 0.1;
     float lightIntensity = diffuseTerm + ambientTerm; 
     lightIntensity = clamp(lightIntensity, 0.001, 0.999);
 
+    sceneCol *= diffuseTerm;
     // Ink Splashes
-    float s1 = perlinNoise(p * 0.1, 1, 1, 0.5, 2.0, uint(432));
-    s1 = perlinNoise(vec3(s1), 1, 1, 0.5, 2.0, uint(13));
 
-    out_Col = vec4(s1, s1, s1, 1.0);
+    float splashNum = 10.;
+    for (float j = 0.; j < splashNum; ++j) {
+        vec2 ps = uv * 2.0 - 1.0;
+        
+        float layerNum = 10.;
+        float noiseScale = 1.;
+        float r = length(ps + vec2(random1fr(j + 14321.), random1fr(random1fr(j + 32.))));
+        float v = 0.;
+        ps += vec2(999., 999.);
+        // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
+        for (float i = 0.; i < layerNum; ++i) {
+            ps *= 1.6;
+            float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * 5.0;
+            if (h < 0.09) {
+                v += 1./layerNum; 
+            }
+        }
+        sceneCol -= vec3(v, v, 0.5 * v);
+    }
+
+
+    
+    
+    
+
+    // out_Col = vec4(v, 0.0, 0.0, 1.0);
+
     // out_Col = vec4(vec3(sceneCol * diffuseTerm), 1.0);
-    // out_Col = vec4(sceneCol, 1.0);
+    out_Col = vec4(sceneCol, 1.0);
 }
 
 
