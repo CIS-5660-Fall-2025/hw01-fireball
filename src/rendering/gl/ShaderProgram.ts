@@ -1,4 +1,4 @@
-import {vec4, mat4} from 'gl-matrix';
+import {vec4, mat4, vec3} from 'gl-matrix';
 import Drawable from './Drawable';
 import {gl} from '../../globals';
 
@@ -28,8 +28,10 @@ class ShaderProgram {
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
-  unifColor: WebGLUniformLocation;
+  unifBodyColor: WebGLUniformLocation;
+  unifOutlineColor: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+  unifCameraWorldPos: WebGLUniformLocation;
 
   unifNoiseScale: WebGLUniformLocation;
   unifAmplitude:  WebGLUniformLocation;
@@ -54,8 +56,10 @@ class ShaderProgram {
     this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
-    this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
+    this.unifBodyColor  = gl.getUniformLocation(this.prog, "u_BodyColor");
+    this.unifOutlineColor = gl.getUniformLocation(this.prog, "u_OutlineColor");
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
+    this.unifCameraWorldPos = gl.getUniformLocation(this.prog, "u_CameraWorldPos");
 
     this.unifNoiseScale = gl.getUniformLocation(this.prog, "u_NoiseScale");
     this.unifAmplitude  = gl.getUniformLocation(this.prog, "u_Amplitude");
@@ -91,10 +95,17 @@ class ShaderProgram {
     }
   }
 
-  setGeometryColor(color: vec4) {
+  setBodyColor(color: vec4) {
     this.use();
-    if (this.unifColor !== -1) {
-      gl.uniform4fv(this.unifColor, color);
+    if (this.unifBodyColor !== -1) {
+      gl.uniform4fv(this.unifBodyColor, color);
+    }
+  }
+
+  setOutlineColor(color: vec4) {
+    this.use();
+    if (this.unifOutlineColor !== -1) {
+      gl.uniform4fv(this.unifOutlineColor, color);
     }
   }
 
@@ -105,8 +116,19 @@ class ShaderProgram {
     }
   }
 
+  setCameraWorldPos(pos: vec3) {
+    this.use();
+    if (this.unifCameraWorldPos !== -1) {
+      gl.uniform3fv(this.unifCameraWorldPos, pos);
+    }
+  }
+
   setTurbulence(noiseScale: number, amplitude: number, speed: number, octaves: number) {
     this.use();
+
+    console.log("setting turbulence:", noiseScale, amplitude, speed, octaves);
+    console.log(this.unifNoiseScale, this.unifAmplitude, this.unifSpeed, this.unifOctaves);
+
     if (this.unifNoiseScale) gl.uniform1f(this.unifNoiseScale, noiseScale);
     if (this.unifAmplitude)  gl.uniform1f(this.unifAmplitude, amplitude);
     if (this.unifSpeed)      gl.uniform1f(this.unifSpeed, speed);

@@ -1,43 +1,52 @@
 #version 300 es
-
-// This is a fragment shader. If you've opened this file first, please
-// open and read lambert.vert.glsl before reading on.
-// Unlike the vertex shader, the fragment shader actually does compute
-// the shading of geometry. For every pixel in your program's output
-// screen, the fragment shader is run for every bit of geometry that
-// particular pixel overlaps. By implicitly interpolating the position
-// data passed into the fragment shader by the vertex shader, the fragment shader
-// can compute what color to apply to its pixel based on things like vertex
-// position, light position, and vertex color.
 precision highp float;
 
-uniform vec4 u_Color; // The color with which to render this instance of geometry.
+uniform vec4 u_BodyColor;
+uniform vec4 u_OutlineColor;
+uniform vec3 u_CameraWorldPos;
+uniform float u_Time;
 
-// These are the interpolated values out of the rasterizer, so you can't know
-// their specific values without knowing the vertices that contributed to them
-in vec4 fs_Nor;
-in vec4 fs_LightVec;
 in vec4 fs_Col;
+in vec3 fs_WorldPos;
+in vec3 fs_WorldNor;
 
-out vec4 out_Col; // This is the final output color that you will see on your
-                  // screen for the pixel that is currently being processed.
+out vec4 out_Col;
 
+float saturate(float x) { return clamp(x, 0.0, 1.0); }
+float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7))) * 43758.5453123); }
+float hash_FractSin(vec2 p)
+{
+	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);   
+}
 void main()
 {
-    // Material base color (before shading)
-        vec4 diffuseColor = u_Color;
+    vec3 N = normalize(fs_WorldNor);
+    vec3 V = normalize(u_CameraWorldPos - fs_WorldPos);
+    float ndotv = saturate(dot(N, V));
 
-        // Calculate the diffuse term for Lambert shading
-        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-        // Avoid negative lighting values
-        // diffuseTerm = clamp(diffuseTerm, 0, 1);
+    float nBody = h3(fs_WorldPos) * 2.0 - 1.0;
+    float nEdge = h3(fs_WorldPos + vec3(19.19, 7.7, 3.3)) * 2.0 - 1.0;
 
-        float ambientTerm = 0.2;
+    float powerBody = max(0.001, 2.0 + 1.0 * nBody);
+    float powerOutline = max(0.001, 2.5 + 1.0 * nEdge);
 
-        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
-                                                            //to simulate ambient lighting. This ensures that faces that are not
-                                                            //lit by our point light are not completely black.
+    float tBody = pow(ndotv, powerBody);
+    float alphaBody = mix(0.0, 0.7, tBody);
 
-        // Compute final shaded color
-        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+    float tOutline = pow(ndotv, powerOutline);
+    float alphaOutline = mix(0.6, 0.0, tOutline);
+
+    vec3 bodyCol = u_BodyColor.rgb * alphaBody;
+    vec3 outlineCol = u_OutlineColor.rgb * alphaOutline;
+
+    float alpha = max(alphaBody, alphaOutline);
+    vec3 finalCol = bodyCol + outlineCol;
+
+    float lum = dot(finalCol, vec3(0.2126, 0.7152, 0.0722));
+    float keepProb = pow(1.0 - lum, 0.5);
+    float timeFactor = sin(u_Time * 0.004);
+    float rng = hash_FractSin(floor(gl_FragCoord.xy) * vec2(3.0, 3.0) + vec2(timeFactor * 59.0,timeFactor * 137.0));
+    float keep = step(rng, keepProb);
+
+    out_Col = vec4(finalCol * keep, alpha * keep);
 }

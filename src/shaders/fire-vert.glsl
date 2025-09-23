@@ -5,7 +5,7 @@ uniform mat4 u_Model;
 uniform mat4 u_ModelInvTr;
 uniform mat4 u_ViewProj;
 uniform float u_Time;
-uniform vec4 u_Color; 
+uniform vec4 u_Color;
 
 uniform float u_NoiseScale;
 uniform float u_Amplitude;
@@ -15,12 +15,9 @@ uniform int   u_Octaves;
 in vec4 vs_Pos;
 in vec4 vs_Nor;
 
-out vec4 fs_Nor;
-out vec4 fs_LightVec;
 out vec4 fs_Col;
 out vec3 fs_WorldPos;
-
-const vec4 lightPos = vec4(5.0, 5.0, 3.0, 1.0);
+out vec3 fs_WorldNor;
 
 float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7))) * 43758.5453123); }
 float vnoise(vec3 p){
@@ -34,6 +31,7 @@ float vnoise(vec3 p){
   float nxy0=mix(nx00,nx10,f.y), nxy1=mix(nx01,nx11,f.y);
   return mix(nxy0,nxy1,f.z);
 }
+
 float turb(vec3 p, int oct){
   const int MAXO=8; float a=0.5, f=1.0, s=0.0;
   for(int i=0;i<MAXO;i++){ if(i>=oct) break;
@@ -43,24 +41,31 @@ float turb(vec3 p, int oct){
   return s;
 }
 
+float saturate(float x){ return clamp(x, 0.0, 1.0); }
 
 void main() {
-  // transform normal to world
   mat3 invTr = mat3(u_ModelInvTr);
   vec3 nrm = normalize(invTr * vs_Nor.xyz);
-  fs_Nor = vec4(nrm, 0.0);
+  fs_WorldNor = nrm;
 
-  // base position in object space
+  vec3 worldUp = normalize((u_Model * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+
   vec3 p = vs_Pos.xyz;
 
-  float d = turb(p * u_NoiseScale + vec3(0.0, -u_Time / 100.0 * u_Speed, 0.0), u_Octaves);
-  d = (d - 0.5) * 2.0;     // center around 0
-  p += nrm * (d * u_Amplitude);
+  float t = turb(p * u_NoiseScale + vec3(0.0, -u_Time * 0.01 * u_Speed, 0.0), u_Octaves);
+
+  float topness = saturate(dot(nrm, worldUp));
+  float topBoost = 3.0;
+  float topWeight = mix(0.2, topBoost, topness * topness);
+
+  p += nrm * (t * u_Amplitude * topWeight);
+
+  float stretch = 0.2;
+  float topMask = mix(0.3, 0.85, topness * topness);
+  p += worldUp * (stretch * t * topMask);
 
   vec4 modelPos = u_Model * vec4(p, 1.0);
-
   fs_WorldPos = modelPos.xyz;
-  fs_LightVec = lightPos - modelPos;
-  fs_Col = u_Color;        // use your uniform color
+  fs_Col = u_Color;
   gl_Position = u_ViewProj * modelPos;
 }
