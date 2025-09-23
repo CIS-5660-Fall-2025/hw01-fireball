@@ -17,7 +17,9 @@ const controls = {
   'Load Scene': loadScene, // A function pointer, essentially
   frequency: 1.0,
   shape: 1,
-  layerNum: 10.0
+  layerNum: 10.0,
+  splashCount: 40.0,
+  splashScaleVar: 2.0
 };
 
 let icosphere: Icosphere;
@@ -27,6 +29,7 @@ let prevTesselations: number = 7;
 let time: number = 0.0;
 let layerNum: number = 10.0;
 let prevShape: number = 0;
+let splashCount: number = 40.0;
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 0.2, controls.tesselations);
@@ -50,8 +53,10 @@ function main() {
     color1: [255, 234, 221, 1],
     color2: [16, 52, 134, 1], 
     color3: [249.9, 246.075, 237.15, 1],
-    splashColor: [255, 0, 0, 1]
+    splashColor: [18, 24, 52, 1]
   };
+
+
 
 
   // Add controls to the gui
@@ -65,6 +70,13 @@ function main() {
   gui.add(controls, 'frequency', 0.1, 5.0).step(0.1);
   gui.add(controls, 'shape', 0, 1).step(1);
   gui.add(controls, 'layerNum', 1.0, 20.0).step(1.0);
+
+  // Splash controls folder
+  const splashControlsFolder = gui.addFolder("Splash Controls");
+  splashControlsFolder.add(controls, 'splashCount', 0, 80).step(1);
+  splashControlsFolder.add(controls, 'splashScaleVar', 0.0, 5.0).step(0.2);
+
+
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -114,9 +126,7 @@ function main() {
     if(controls.shape != prevShape) {
       prevShape = controls.shape;
     }
-    if(controls.layerNum != layerNum) {
-      layerNum = controls.layerNum;
-    }
+
 
     const sceneDrawables = (prevShape === 1) ? [icosphere] : [cube];
     renderer.renderWithPost(
@@ -128,9 +138,11 @@ function main() {
       vec4.fromValues(palette.color1[0] / 255, palette.color1[1] / 255, palette.color1[2] / 255, 1),
       vec4.fromValues(palette.color2[0] / 255, palette.color2[1] / 255, palette.color2[2] / 255, 1),
       vec4.fromValues(palette.splashColor[0] / 255, palette.splashColor[1] / 255, palette.splashColor[2] / 255, 1),
+      controls.splashCount,
+      controls.splashScaleVar,
       controls.frequency,
       time,
-      layerNum
+      controls.layerNum
     );
     stats.end();
 

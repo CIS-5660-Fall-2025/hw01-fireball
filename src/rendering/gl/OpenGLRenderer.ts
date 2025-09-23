@@ -89,7 +89,11 @@ class OpenGLRenderer {
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
   }
 
-  renderWithPost(camera: Camera, sceneProg: ShaderProgram, postProg: ShaderProgram, drawables: Array<Drawable>, screenQuad: Drawable, color1: vec4, color2: vec4, splashColor: vec4, freq: number, time: number, layerNum: number) {
+  renderWithPost(camera: Camera, sceneProg: ShaderProgram, postProg: ShaderProgram, 
+    drawables: Array<Drawable>, screenQuad: Drawable, 
+    color1: vec4, color2: vec4, splashColor: vec4, splashCount: number,
+    splashScaleVar: number,
+    freq: number, time: number, layerNum: number) {
     // Renderto framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -123,6 +127,8 @@ class OpenGLRenderer {
     postProg.setGeometryColor1(color1);
     postProg.setGeometryColor2(color2);
     postProg.setGeometrySplashColor(splashColor);
+    postProg.setSplashCount(splashCount);
+    postProg.setSplashScaleVar(splashScaleVar);
     postProg.setResolution(this.canvas.width, this.canvas.height);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.colorTex);

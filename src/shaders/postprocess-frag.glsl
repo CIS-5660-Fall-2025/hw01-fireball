@@ -7,6 +7,8 @@ uniform float u_Time;
 uniform vec4 u_Color1; // The color with which to render this instance of geometry.
 uniform vec4 u_Color2;
 uniform vec4 u_SplashColor;
+uniform float u_SplashCount;
+uniform float u_SplashScaleVar;
 
 in vec2 v_UV;
 out vec4 out_Col;
@@ -285,11 +287,10 @@ void main() {
     sceneCol *= diffuseTerm;
     // Ink Splashes
 
-    float splashNum = 10.;  // REMEMBERTO CHANGE TO 40.
     float pi = 3.14159265;
     float time = u_Time * 0.001;
 
-    for (float k = 0.; k < splashNum; k++) {
+    for (float k = 0.; k < u_SplashCount; k++) {
         time += random1(k);
         float seed = floor(time);
         vec2 ps = uv * 2.0 - 1.0;
@@ -303,8 +304,7 @@ void main() {
         // float s1 = perlinNoise(p, 1, 1, 0.5, 2.0, uint(432));
         for (float i = 0.; i < layerNum; ++i) {
             ps *= 1.6;
-            float radiusRandAmp = 2.;
-            float radius = (5.0 + radiusRandAmp * random1fr(seed));
+            float radius = (5.0 + u_SplashScaleVar * random1fr(seed));
             float h = noiseScale*perlinNoise(vec3(ps.x, ps.y, 1.0), 1, 1, 0.5, 2.0, uint(23)) + r * radius;
             if (h < 0.09) {
                 v += 1./layerNum; 

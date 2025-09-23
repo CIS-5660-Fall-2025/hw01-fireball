@@ -30,7 +30,11 @@ class ShaderProgram {
   unifViewProj: WebGLUniformLocation;
   unifColor1: WebGLUniformLocation;
   unifColor2: WebGLUniformLocation;
+
   unifSplashColor: WebGLUniformLocation;
+  unifSplashCount: WebGLUniformLocation;
+  unifSplashScaleVar: WebGLUniformLocation;
+
   unifFreq: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifLayerNum: WebGLUniformLocation;
@@ -57,6 +61,8 @@ class ShaderProgram {
     this.unifColor1      = gl.getUniformLocation(this.prog, "u_Color1");
     this.unifColor2      = gl.getUniformLocation(this.prog, "u_Color2");
     this.unifSplashColor      = gl.getUniformLocation(this.prog, "u_SplashColor");
+    this.unifSplashCount  = gl.getUniformLocation(this.prog, "u_SplashCount");
+    this.unifSplashScaleVar = gl.getUniformLocation(this.prog, 'u_SplashScaleVar');
     this.unifFreq        = gl.getUniformLocation(this.prog, "u_Freq");
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
     this.unifLayerNum   = gl.getUniformLocation(this.prog, "u_LayerNum");
@@ -110,6 +116,20 @@ class ShaderProgram {
     this.use();
     if (this.unifSplashColor !== -1) {
       gl.uniform4fv(this.unifSplashColor, color);
+    }
+  }
+
+  setSplashCount(splashCount: number) {
+    this.use();
+    if (this.unifSplashCount !== -1) {
+      gl.uniform1f(this.unifSplashCount, splashCount);
+    }
+  }
+
+  setSplashScaleVar(splashScaleVar: number) {
+    this.use();
+    if (this.unifSplashScaleVar !== -1) {
+      gl.uniform1f(this.unifSplashScaleVar, splashScaleVar);
     }
   }
 
