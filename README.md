@@ -1,5 +1,12 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+## Description
+[Demo](http://luoluobuli.github.io/CIS566-hw01-fireball)
+![](images/screenshot.png)
+I apply a displacement to each vertex in the vertex shader using the output of FBM function. The displacement is built from two layers: one with high amplitude and low frequency, and another with low amplitude and high frequency. Both layers can be adjusted through the GUI.  Additionally, I offset vertices above the origin slightly upward to enhance the appearance of a fire-like effect.
+
+In fragment shader, two input colors are blended based on the displacement value and the vertex height.
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
