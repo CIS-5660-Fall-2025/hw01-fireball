@@ -13,6 +13,7 @@ const controls = {
   tesselations: 5,
   "hue offset": 0,
   "# octaves": 5,
+  "fade rate": 0.05,
   reset: () => {
     gui.revert(gui);
   },
@@ -41,11 +42,14 @@ function main() {
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, "hue offset", 0, 1).step(Number.EPSILON);
   gui.add(controls, "# octaves", 0, 5).step(1);
+  gui.add(controls, "fade rate", 0, 1).step(Number.EPSILON);
   gui.add(controls, "reset");
 
   // get canvas and webgl context
+  const bg = <HTMLCanvasElement>document.getElementById("bg");
+  const context = bg.getContext("2d");
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
-  gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
+  gl = <WebGL2RenderingContext> canvas.getContext('webgl2', {preserveDrawingBuffer: true });
   if (!gl) {
     alert('WebGL 2 not supported!');
   }
@@ -53,10 +57,10 @@ function main() {
   // Initial call to load scene
   loadScene();
 
+
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas, gl);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
@@ -82,15 +86,29 @@ function main() {
     ], now, controls["hue offset"], controls["# octaves"]);
     stats.end();
 
+    context.fillStyle = `#222232${Math.floor(controls["fade rate"] * 255).toString(16).slice(-2).padStart(2, "0")}`;
+    context.fillRect(0, 0, innerWidth, innerHeight);
+    context.drawImage(canvas, 0, 0);
+
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
   }
 
   window.addEventListener('resize', function() {
+    bg.width = innerWidth;
+    bg.height = innerHeight;
+    context.fillStyle = "#223";
+    context.fillRect(0, 0, innerWidth, innerHeight);
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
   }, false);
+
+  bg.width = innerWidth;
+  bg.height = innerHeight;
+  context.fillStyle = "#223";
+  context.fillRect(0, 0, innerWidth, innerHeight);
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
