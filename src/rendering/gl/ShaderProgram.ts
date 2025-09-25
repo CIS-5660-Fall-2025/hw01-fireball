@@ -1,6 +1,6 @@
-import {vec2, vec3, vec4, mat4} from 'gl-matrix';
-import Drawable from './Drawable';
-import {gl} from '../../globals';
+import { vec2, vec3, vec4, mat4 } from "gl-matrix";
+import Drawable from "./Drawable";
+import { gl } from "../../globals";
 
 var activeProgram: WebGLProgram = null;
 
@@ -16,19 +16,29 @@ export class Shader {
       throw gl.getShaderInfoLog(this.shader);
     }
   }
-};
+}
 
 class ShaderProgram {
   prog: WebGLProgram;
 
   attrPos: number;
   attrNor: number;
+  attrCol: number;
 
+  unifModel: WebGLUniformLocation;
+  unifModelInvTr: WebGLUniformLocation;
+  unifViewProj: WebGLUniformLocation;
   unifRef: WebGLUniformLocation;
   unifEye: WebGLUniformLocation;
   unifUp: WebGLUniformLocation;
   unifDimensions: WebGLUniformLocation;
+  unifColor: WebGLUniformLocation;
+  unifFreq: WebGLUniformLocation;
+  unifAmp: WebGLUniformLocation;
+  unifOctave: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+
+  unifObjectType: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -41,12 +51,23 @@ class ShaderProgram {
       throw gl.getProgramInfoLog(this.prog);
     }
 
+    this.unifObjectType = gl.getUniformLocation(this.prog, "u_ObjectType");
+
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
-    this.unifEye   = gl.getUniformLocation(this.prog, "u_Eye");
-    this.unifRef   = gl.getUniformLocation(this.prog, "u_Ref");
-    this.unifUp   = gl.getUniformLocation(this.prog, "u_Up");
-    this.unifDimensions   = gl.getUniformLocation(this.prog, "u_Dimensions");
-    this.unifTime   = gl.getUniformLocation(this.prog, "u_Time");
+    this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
+    this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
+    this.unifEye = gl.getUniformLocation(this.prog, "u_Eye");
+    this.unifRef = gl.getUniformLocation(this.prog, "u_Ref");
+    this.unifUp = gl.getUniformLocation(this.prog, "u_Up");
+    this.unifDimensions = gl.getUniformLocation(this.prog, "u_Dimensions");
+    this.unifModel = gl.getUniformLocation(this.prog, "u_Model");
+    this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
+    this.unifViewProj = gl.getUniformLocation(this.prog, "u_ViewProj");
+    this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
+    this.unifFreq = gl.getUniformLocation(this.prog, "u_Frequency");
+    this.unifAmp = gl.getUniformLocation(this.prog, "u_Amplitude");
+    this.unifOctave = gl.getUniformLocation(this.prog, "u_Octave");
+    this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
   }
 
   use() {
@@ -56,29 +77,85 @@ class ShaderProgram {
     }
   }
 
+  setObjectType(type: number) {
+    this.use();
+    if (this.unifObjectType !== -1) {
+      gl.uniform1f(this.unifObjectType, type);
+    }
+  }
+
   setEyeRefUp(eye: vec3, ref: vec3, up: vec3) {
     this.use();
-    if(this.unifEye !== -1) {
+    if (this.unifEye !== -1) {
       gl.uniform3f(this.unifEye, eye[0], eye[1], eye[2]);
     }
-    if(this.unifRef !== -1) {
+    if (this.unifRef !== -1) {
       gl.uniform3f(this.unifRef, ref[0], ref[1], ref[2]);
     }
-    if(this.unifUp !== -1) {
+    if (this.unifUp !== -1) {
       gl.uniform3f(this.unifUp, up[0], up[1], up[2]);
     }
   }
 
   setDimensions(width: number, height: number) {
     this.use();
-    if(this.unifDimensions !== -1) {
+    if (this.unifDimensions !== -1) {
       gl.uniform2f(this.unifDimensions, width, height);
+    }
+  }
+
+  setModelMatrix(model: mat4) {
+    this.use();
+    if (this.unifModel !== -1) {
+      gl.uniformMatrix4fv(this.unifModel, false, model);
+    }
+
+    if (this.unifModelInvTr !== -1) {
+      let modelinvtr: mat4 = mat4.create();
+      mat4.transpose(modelinvtr, model);
+      mat4.invert(modelinvtr, modelinvtr);
+      gl.uniformMatrix4fv(this.unifModelInvTr, false, modelinvtr);
+    }
+  }
+
+  setViewProjMatrix(vp: mat4) {
+    this.use();
+    if (this.unifViewProj !== -1) {
+      gl.uniformMatrix4fv(this.unifViewProj, false, vp);
+    }
+  }
+
+  setGeometryColor(color: vec4) {
+    this.use();
+    if (this.unifColor !== -1) {
+      gl.uniform4fv(this.unifColor, color);
+    }
+  }
+
+  setNoiseFrequency(freq: number) {
+    this.use();
+    if (this.unifColor !== -1) {
+      gl.uniform1f(this.unifFreq, freq);
+    }
+  }
+
+  setNoiseAmplitude(amp: number) {
+    this.use();
+    if (this.unifColor !== -1) {
+      gl.uniform1f(this.unifAmp, amp);
+    }
+  }
+
+  setNoiseOctave(octaves: number) {
+    this.use();
+    if (this.unifColor !== -1) {
+      gl.uniform1i(this.unifOctave, octaves);
     }
   }
 
   setTime(t: number) {
     this.use();
-    if(this.unifTime !== -1) {
+    if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, t);
     }
   }
@@ -91,11 +168,17 @@ class ShaderProgram {
       gl.vertexAttribPointer(this.attrPos, 4, gl.FLOAT, false, 0, 0);
     }
 
+    if (this.attrNor != -1 && d.bindNor()) {
+      gl.enableVertexAttribArray(this.attrNor);
+      gl.vertexAttribPointer(this.attrNor, 4, gl.FLOAT, false, 0, 0);
+    }
+
     d.bindIdx();
     gl.drawElements(d.drawMode(), d.elemCount(), gl.UNSIGNED_INT, 0);
 
     if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);
+    if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
   }
-};
+}
 
 export default ShaderProgram;
