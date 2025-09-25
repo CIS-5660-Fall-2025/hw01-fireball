@@ -8,5 +8,5 @@ out vec2 fs_Pos;
 
 void main() {
   fs_Pos = vs_Pos.xy;
-  gl_Position = vs_Pos;
+  gl_Position = vec4(vs_Pos.x, vs_Pos.y, 0.999, 1.0); // z = .999 quickly put it behind fireball
 }

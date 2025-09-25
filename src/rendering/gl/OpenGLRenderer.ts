@@ -22,9 +22,19 @@ class OpenGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 
-  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number) {
-    prog.setEyeRefUp(camera.controls.eye, camera.controls.center, camera.controls.up);
-    prog.setTime(time);
+  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, col: vec4, volatility : number, cartooniness : number, temperature : number, fireballBrightness : number, timeSinceStart : number, aspectRatio : number) {
+    let model = mat4.create();
+    let viewProj = mat4.create();
+
+    mat4.identity(model);
+    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+    prog.setModelMatrix(model);
+    prog.setViewProjMatrix(viewProj);
+    prog.setGeometryColor(col);
+    prog.setFireParams(volatility, cartooniness, temperature, fireballBrightness);
+    prog.setTime(timeSinceStart);
+    prog.setCamSpecs(camera.controls.eye, camera.controls.center, camera.controls.up);
+    prog.setAspect(aspectRatio);
 
     for (let drawable of drawables) {
       prog.draw(drawable);
