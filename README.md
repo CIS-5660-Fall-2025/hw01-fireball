@@ -1,5 +1,19 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+[Live Demo](https://grievans.github.io/hw01-fireball/)
+
+![](fireballScreenshot.png)
+
+The main effect is a combination of multiple noise functions manipulating the fireball's vertices. The primary influence is a worley noise function which displaces the sphere out along its normals and upwards, but this is combined with FBM to add rougher movement to the edges and a sine-based function which causes the sides to billow in and out. The fragment shader sets the color with a gradient based on the value of the prior worley noise function, but interpolated with a bucketed version of the same gradient in order to give a more cartoony look. I also include some perturbation on these values with additional perlin noise.
+
+'Toolbox' functions used include sine/cosine, bias, gain, and smoothstep.
+
+Various controllable parameters can be seen in the menu in the top right, as in the above screenshot.
+
+The 'spice' includes a few background effects—a cube has the fire color projected onto it with dropoff to create the effect of it illuminating a room, and clouds of smoke rise from the center of the flame, which use a very simplistic pathtracing model to find densities accumulated over rays through the cloud region in order to set their alpha values. I also included a post-process outline effect on the fire itself.
+
+For mouse interaction, a user can make the flame billow out in any direction by holding alt and moving the mouse. This can be reset using the same "Reset to Defaults" button as the other options.
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.

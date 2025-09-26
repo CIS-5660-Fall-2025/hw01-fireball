@@ -1,7 +1,10 @@
 {
+  "homepage": "https://grievans.github.com/hw01-fireball/",
   "scripts": {
     "start": "webpack-dev-server --no-hot --live-reload",
-    "build": "webpack"
+    "build": "webpack",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "@types/webgl2": "0.0.6",
@@ -13,7 +16,11 @@
     "webpack-glsl-loader": "^1.0.1"
   },
   "dependencies": {
+    "@types/dat.gui": "^0.7.13",
     "3d-view-controls": "^2.2.2",
+    "dat.gui": "^0.7.9",
+    "deploy": "^1.0.3",
+    "gh-pages": "^6.3.0",
     "gl-matrix": "^3.3.0"
   }
 }
