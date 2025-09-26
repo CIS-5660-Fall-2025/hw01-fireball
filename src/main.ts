@@ -1,111 +1,101 @@
-import {vec2, vec3} from 'gl-matrix';
-// import * as Stats from 'stats-js';
-// import * as DAT from 'dat-gui';
-import Square from './geometry/Square';
+import {vec3, mat4} from 'gl-matrix';
+import * as dat from 'dat.gui';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
-import {setGL} from './globals';
+import {setGL, gl} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import Icosphere from './geometry/Icosphere';
+import Quad from './geometry/Quad';
 
-// Define an object with application parameters and button callbacks
-// This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-  tesselations: 5,
-  'Load Scene': loadScene, // A function pointer, essentially
+  displacement: 0.5,
+  pulseSpeed: 0.03,
+  colorIntensity: 1.2,
+  'Reset': () => Object.assign(controls, {displacement: 0.5, pulseSpeed: 0.03, colorIntensity: 1.2})
 };
 
-let square: Square;
-let time: number = 0;
+let mesh: Icosphere;
+let background: Quad;
+let time = 0;
+let startTime: number;
 
 function loadScene() {
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
-  // time = 0;
+  background = new Quad();
+  background.create();
+  mesh = new Icosphere(vec3.fromValues(0, 0, 0), 1, 4);
+  mesh.create();
+  startTime = Date.now();
 }
 
 function main() {
-  window.addEventListener('keypress', function (e) {
-    // console.log(e.key);
-    switch(e.key) {
-      // Use this if you wish
-    }
-  }, false);
-
-  window.addEventListener('keyup', function (e) {
-    switch(e.key) {
-      // Use this if you wish
-    }
-  }, false);
-
-  // Initial display for framerate
-  // const stats = Stats();
-  // stats.setMode(0);
-  // stats.domElement.style.position = 'absolute';
-  // stats.domElement.style.left = '0px';
-  // stats.domElement.style.top = '0px';
-  // document.body.appendChild(stats.domElement);
-
-  // Add controls to the gui
-  // const gui = new DAT.GUI();
-
-  // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
-  if (!gl) {
-    alert('WebGL 2 not supported!');
-  }
-  // `setGL` is a function imported above which sets the value of `gl` in the `globals.ts` module.
-  // Later, we can import `gl` from `globals.ts` to access it
+  if (!gl) alert('WebGL 2 not supported!');
   setGL(gl);
 
-  // Initial call to load scene
   loadScene();
-
-  const camera = new Camera(vec3.fromValues(0, 0, -10), vec3.fromValues(0, 0, 0));
-
+  const camera = new Camera(vec3.fromValues(0, 1, -4), vec3.fromValues(0, 0, 0));
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(164.0 / 255.0, 233.0 / 255.0, 1.0, 1);
+  renderer.setClearColor(0.0, 0.0, 0.0, 1);
   gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-  const flat = new ShaderProgram([
+  const backgroundShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/background-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/background-frag.glsl')),
+  ]);
+
+  const fireballShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/flat-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
 
-  function processKeyPresses() {
-    // Use this if you wish
-  }
+  const gui = new dat.GUI();
+  gui.add(controls, 'displacement', 0, 1).step(0.01).name('Fire Size');
+  gui.add(controls, 'pulseSpeed', 0.01, 0.1).step(0.01).name('Fire Speed');
+  gui.add(controls, 'colorIntensity', 0.5, 2).step(0.1).name('Fire Intensity');
+  gui.add(controls, 'Reset');
 
-  // This function will be called every frame
   function tick() {
     camera.update();
-    // stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
-    processKeyPresses();
-    renderer.render(camera, flat, [
-      square,
-    ], time);
-    time++;
-    // stats.end();
+    mesh.update(Date.now() - startTime);
 
-    // Tell the browser to call `tick` again whenever it renders a new frame
+    gl.disable(gl.DEPTH_TEST);
+    backgroundShader.use();
+    backgroundShader.setTime(time);
+    backgroundShader.draw(background);
+    gl.enable(gl.DEPTH_TEST);
+
+    fireballShader.use();
+    const model = mat4.create();
+    const viewProj = mat4.create();
+    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+    
+    fireballShader.setModelMatrix(model);
+    fireballShader.setViewProjMatrix(viewProj);
+    fireballShader.setTime(time);
+    
+    gl.uniform1f(gl.getUniformLocation(fireballShader.prog, 'u_Displacement'), controls.displacement);
+    gl.uniform1f(gl.getUniformLocation(fireballShader.prog, 'u_PulseSpeed'), controls.pulseSpeed);
+    gl.uniform1f(gl.getUniformLocation(fireballShader.prog, 'u_ColorIntensity'), controls.colorIntensity);
+    
+    fireballShader.draw(mesh);
+    time++;
     requestAnimationFrame(tick);
   }
 
-  window.addEventListener('resize', function() {
+  window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
-    flat.setDimensions(window.innerWidth, window.innerHeight);
-  }, false);
+  });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
-  flat.setDimensions(window.innerWidth, window.innerHeight);
-
-  // Start the render loop
   tick();
 }
 

@@ -6,7 +6,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
-    publicPath: '/',
+    publicPath: '',
   },
   module: {
     rules: [
@@ -26,7 +26,7 @@ module.exports = {
   },
   devtool: 'source-map',
   devServer: {
-    port: 5660,
+    port: 7000,
     static: {
       directory: path.join(__dirname, 'dist'),
     },
