@@ -23,9 +23,35 @@ class OpenGLRenderer {
   }
 
   render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number) {
-    prog.setEyeRefUp(camera.controls.eye, camera.controls.center, camera.controls.up);
+    // Set time and camera parameters for both flat and Lambert shaders
     prog.setTime(time);
+    prog.setEyeRefUp(camera.controls.eye, camera.controls.center, camera.controls.up);
 
+    // Create matrices for Lambert shaders
+    const model = mat4.create();
+    mat4.identity(model);
+
+    const view = mat4.create();
+    mat4.lookAt(view, camera.controls.eye, camera.controls.center, camera.controls.up);
+
+    const proj = mat4.create();
+    mat4.perspective(proj, camera.fovy, camera.aspectRatio, camera.near, camera.far);
+
+    const viewProj = mat4.create();
+    mat4.multiply(viewProj, proj, view);
+
+    const modelInvTr = mat4.create();
+    mat4.invert(modelInvTr, model);
+    mat4.transpose(modelInvTr, modelInvTr);
+
+    // Set matrices for Lambert shaders (will be ignored by flat shaders)
+    prog.setModelMatrix(model);
+    prog.setModelInvTrMatrix(modelInvTr);
+    prog.setViewProjMatrix(viewProj);
+
+
+
+    // Draw all drawables
     for (let drawable of drawables) {
       prog.draw(drawable);
     }

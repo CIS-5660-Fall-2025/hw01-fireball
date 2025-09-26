@@ -1,8 +1,68 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+
+
+## Demo
+
+**Live Demo**: [demo]([Project 1 | CIS 566](https://rmurdock41.github.io/hw01-fireball/))
+
+
+
+![record.gif](img/record.gif)
+
+## Overview
+
+This project creates a stunning multi-layered fireball effect using WebGL shaders and procedural noise techniques. The fireball consists of four distinct color layers (red, orange, yellow, white) that blend together to create a realistic fire appearance, enhanced with a dynamic meteor background and bloom post-processing effects.
+
+## Features
+
+### Multi-Layer Fireball System
+
+- **Four Color Layers**: Red (inner), Orange, Yellow, and White (outer) layers
+- **Individual Layer Controls**: Each layer has independent settings for:
+  - Voronoi noise scaling
+  - Flame size/threshold
+  - Gradient strength
+  - Enable/disable toggle
+
+### Dynamic Background
+
+- **Meteor System**: Animated falling meteors with customizable:
+  - Count (10-100 meteors)
+  - Speed and size
+  - Brightness and lifetime
+  - Procedural positioning and animation
+
+### Additional Rendering Effects
+
+- **Bloom Post-Processing**: Multi-pass bloom effect with:
+  - Adjustable bloom strength
+  - Variable blur size
+  - Scene composition blending
+- **Alpha Blending**: Proper transparency handling for layered rendering
+
+### Vertex Shader Implementation
+
+- **Voronoi-based Deformation**: Surface displacement using multi-octave Voronoi noise
+- **Time-based Animation**: Continuous surface undulation and flame movement
+- **Scale-aware Transformation**: Per-layer scaling for proper depth ordering
+
+### Fragment Shader Innovation
+
+- **Advanced Voronoi Patterns**: Three-scale Voronoi combination with:
+  - Weighted cell generation for natural variation
+  - Seamless UV wrapping to eliminate texture seams
+  - Temporal animation offsets for dynamic flame motion
+- **Dual Gradient System**:
+  - Linear gradients for standard flame layers
+  - Bell-shaped gradients for white-hot core effects
+- **Sophisticated Blending**: Soft Light blending mode for realistic fire interaction
+
+
+
 ## Objective
 
-Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
+Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm. 
 
 ## Getting Started
 
@@ -13,18 +73,19 @@ Get comfortable with using WebGL and its shaders to generate an interesting 3D, 
 3. In the root directory of your project, run `npm install`. This will download all of those dependencies.
 
 4. Do either of the following (but I highly recommend the first one for reasons I will explain later).
-
+   
     a. Run `npm start` and then go to `localhost:7000` in your web browser
-
+   
     b. Run `npm run build` and then go open `index.html` in your web browser
-
+   
     You should hopefully see the framework code with a 3D cube at the center of the screen!
 
-
 ## Developing Your Code
+
 All of the JavaScript code is living inside the `src` directory. The main file that gets executed when you load the page as you may have guessed is `main.js`. Here, you can make any changes you want, import functions from other files, etc. The reason that I highly suggest you build your project with `npm start` is that doing so will start a process that watches for any changes you make to your code. If it detects anything, it'll automagically rebuild your project and then refresh your browser window for you. Wow. That's cool. If you do it the other way, you'll need to run `npm build` and then refresh your page every time you want to test something.
 
 ## Publishing Your Code
+
 We highly suggest that you put your code on GitHub. One of the reasons we chose to make this course using JavaScript is that the Web is highly accessible and making your awesome work public and visible can be a huge benefit when you're looking to score a job or internship. To aid you in this process, running `npm run deploy` will automatically build your project and push it to `gh-pages` where it will be visible at `username.github.io/repo-name`.
 
 ## Setting up `main.ts`
@@ -40,7 +101,6 @@ Across your vertex and fragment shaders, you must implement a variety of functio
 - Your fragment shader should apply a gradient of colors to your fireball's surface, where the fragment color is correlated in some way to the vertex shader's displacement.
 - Both the vertex and fragment shaders should alter their output based on a uniform time variable (i.e. they should be animated). You might consider making a constant animation that causes the fireball's surface to roil, or you could make an animation loop in which the fireball repeatedly explodes.
 - Across both shaders, you should make use of at least four of the functions discussed in the Toolbox Functions slides.
-
 
 ## Noise Application
 
