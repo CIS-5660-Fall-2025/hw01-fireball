@@ -1,5 +1,33 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+This project implements a real-time animated fireball using custom WebGL shaders and procedural generation techniques. The fireball features dynamic vertex displacement for organic surface deformation and sophisticated fragment shading for realistic fire coloring, all rendered in real-time using modern graphics programming techniques.
+## Technical Implementation
+
+### Vertex Shader Features
+- **Unified Organic Displacement**: Creates a single, cohesive flame shape using fractal Brownian motion (fBm) rather than separate flame tongues
+- **Height-Based Intensity Scaling**: Smooth transitions from solid fireball base to extended flame tips using smoothstep interpolation
+- **Multi-Octave Noise**: 4-octave fBm provides organic surface detail and natural flame motion
+- **Temporal Animation**: Time-driven displacement creates continuous roiling and flickering effects
+
+### Fragment Shader Features
+- **Physically-Based Fire Colors**: Dynamic color gradient from dark red core through orange and yellow to white-hot tips
+- **Displacement-Correlated Coloring**: Fragment colors directly respond to vertex displacement values for coherent fire appearance
+- **Non-Linear Color Transitions**: Power curves and smoothstep functions create realistic fire color distributions
+- **Rim Lighting Effects**: Enhanced silhouette definition for dramatic visual impact
+- **Flickering Animation**: Noise-based color variations simulate natural fire behavior
+
+### Toolbox Functions Implementation
+The project implements multiple mathematical functions from procedural graphics literature:
+
+1. **Smoothstep**: Smooth interpolation for seamless transitions
+2. **Bias Function**: Curve shape control for displacement characteristics
+3. **Pulse Function**: Localized effects (minimally used for subtle breathing)
+5. **Impulse Function**: Dramatic color spikes for flickering effects
+6. **Parabola Function**: Symmetric intensity variations
+
+![](./fireball.gif)
+
+[live demo](https://lanbiubiu1.github.io/hw01-fireball/)
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
