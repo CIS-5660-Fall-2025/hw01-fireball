@@ -22,9 +22,22 @@ class OpenGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 
-  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number) {
-    prog.setEyeRefUp(camera.controls.eye, camera.controls.center, camera.controls.up);
+    render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>,
+        baseColor: number[], time: number, gradientColor : number, swayLevel : number, frameThreshold : number) {
+    let model = mat4.create();
+    let viewProj = mat4.create();
+    // let color = vec4.fromValues(1, 0, 0, 1);
+    let color = vec4.fromValues(baseColor[0]/255.0, baseColor[1]/255.0, baseColor[2]/255.0, 1);
+
+    mat4.identity(model);
+    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+    prog.setModelMatrix(model);
+    prog.setViewProjMatrix(viewProj);
+    prog.setGeometryColor(color);
     prog.setTime(time);
+    prog.setGradientType(gradientColor);
+    prog.setSwayLevel(swayLevel);
+    prog.setFrameThreshold(frameThreshold);
 
     for (let drawable of drawables) {
       prog.draw(drawable);
