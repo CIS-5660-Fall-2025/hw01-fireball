@@ -1,5 +1,79 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+## Before Submissions...
+
+Here are some debug notes for things about javascript setup and page setup only:
+
+When creating projects (right after fork and clone, and before anything starts, should be at the time of checking `npm start`):
+
+1. After `npm install`, no further steps, especially don't do fixing with `-force`, will break everything!
+
+2. (If I remember correctly) When anything goes wrong and want to start over from npm install, may just delete the whole node_modules folder and then redo `npm install`. Just guessing, but deleting this folder may delete all things just installed by `npm install`.
+
+3. (Still if I remember correctly) Just try to use the *package.json* and *package-lock.json* from hw00 if the hw00 one is working properly.
+
+When deploying websites: (about `npm run deploy` but not `npm start` or `npm run build`)
+
+0. Beforehead, first commit and push all the changes, as `npm run deploy` should have command to make new branch and deploy website directly onto github.
+
+1. Problems I get: `Missing script: "deploy"`
+
+2. (Copying directly from discord hw-help screenshot) Making double sure all npm dependencies are installed, including:
+
+    * `npm i --save-dev @types/dat.gui`
+
+    * `npm i --save-dev @types/stats.js`
+
+    * and `npm install gh-pages --save-dev`
+
+3. (Copying directly from discord hw-help screenshot) Modify *package.json* with the following scripts if they aren't present:
+
+```
+"scripts":{
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    ...
+}
+```
+
+4. (Extra step I have take) If still not working, do `npm update` and then try `npm run deploy` again.
+
+5. If there are update after one successful `npm run deploy`, automatic action should be take. If there are any problems, try to read error message given by github action.
+
+    * My personal update: Check `build and deploy` and change `uses: actions/cache@v2` to `uses: actions/cache@v4` (still version update, v2 deprecated at this time). Then my github action may run automatically with the next commit.
+
+* **Always check timestamp if information provided not useful, especially months and years later. There may be more and more updates of different versions in the future for all aspects.**
+
+(Written by someone tried to debug for javascript stuff only, actually mostly about missing modules and version conflicts and mix of both and also other confusing problems, for three days or more. QAQ)
+
+## Submission
+
+[deployed webpage](https://yuningupenn.github.io/hw01-fireball/)
+
+Features:
+
+* Use combination of sinusoidal functions and FBM in vertex shader to calculate displacement of a point on normal direction, with both low-frequency high-amplitude and high-frequency low-amplitude.
+
+* Time included in both FBM and sinusoidal functions as a global variable.
+
+* Gradient of color applied between red and orange for color of the fireball based on displacement calculated in vertex shader (which is a noise value).
+
+* Perlin noise and Worley noise helps in fragment shader for noisy color.
+
+* Thus in total there are sine, cosine, Perlin, Worley, and also FBM included across both shaders.
+
+* In total five interactive variables of different aspects, and a button that may set variables back to default values.
+
+    * May vary frequency, amplitude, radius of the fireball, tesselations (default as provided in hw00, but range changed), and also the density of the stars as background.
+
+Extra:
+
+* A large icosphere as background.
+
+* Use Worley to generate "stars" on the sphere.
+
+![screenshot](./hw01%20Fireball.png)
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.

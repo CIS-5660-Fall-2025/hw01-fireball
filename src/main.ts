@@ -1,7 +1,9 @@
 import {vec2, vec3} from 'gl-matrix';
-// import * as Stats from 'stats-js';
-// import * as DAT from 'dat-gui';
+const Stats = require('stats-js');
+import * as DAT from 'dat.gui';
+import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
+import Cube from './geometry/Cube';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -12,15 +14,28 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
+  radius: 2,
+  amp: 0.5,
+  freq: 1.0,
+  density: 80.0,
 };
 
 let square: Square;
+let icosphere: Icosphere;
+let cube: Cube; 
 let time: number = 0;
+let background: Icosphere;
 
 function loadScene() {
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
+  icosphere = new Icosphere(vec3.fromValues(0, 0, 0), controls.radius, controls.tesselations);
+  icosphere.create();
+  cube = new Cube(vec3.fromValues(0, 0, 0));
+  cube.create();
   // time = 0;
+  background = new Icosphere(vec3.fromValues(0, 0, 0), 30, 5);
+  background.create();
 }
 
 function main() {
@@ -38,15 +53,31 @@ function main() {
   }, false);
 
   // Initial display for framerate
-  // const stats = Stats();
-  // stats.setMode(0);
-  // stats.domElement.style.position = 'absolute';
-  // stats.domElement.style.left = '0px';
-  // stats.domElement.style.top = '0px';
-  // document.body.appendChild(stats.domElement);
+  const stats = Stats();
+  stats.setMode(0);
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.left = '0px';
+  stats.domElement.style.top = '0px';
+  document.body.appendChild(stats.domElement);
 
   // Add controls to the gui
-  // const gui = new DAT.GUI();
+  const gui = new DAT.GUI();
+  gui.add(controls, 'tesselations', 0, 5).step(1);
+  gui.add(controls, "radius", 1, 3).step(0.2);
+  gui.add(controls, 'amp', 0.2, 0.8).step(0.01);
+  gui.add(controls, 'freq', 0.0, 2.0).step(0.1);
+  gui.add(controls, 'density', 30.0, 150.0).step(1.0).name('star density');
+
+  gui.add({ reset: () => {
+    // Reset all the parameters in controls
+    controls.tesselations = 5;
+    controls.radius = 2;
+    controls.amp = 0.5;
+    controls.freq = 1.0;
+    controls.density = 80.0;
+    // Update all controls in gui
+    gui.__controllers.forEach(controller => controller.updateDisplay());
+  }}, 'reset');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -72,6 +103,23 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
 
+  //test lambert
+  const lambert = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
+  ]);
+
+  const test = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/fireball-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
+  ]);
+  
+  const bgShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/background-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/background-frag.glsl')),
+  ]);
+  
+
   function processKeyPresses() {
     // Use this if you wish
   }
@@ -79,15 +127,20 @@ function main() {
   // This function will be called every frame
   function tick() {
     camera.update();
-    // stats.begin();
+    stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+    icosphere = new Icosphere(vec3.fromValues(0, 0, 0), controls.radius, controls.tesselations);
+    icosphere.create();
+
     processKeyPresses();
-    renderer.render(camera, flat, [
-      square,
-    ], time);
+    renderer.render(camera, test, [
+      icosphere,
+    ], controls.amp, controls.freq);
+    renderer.renderbg(camera, bgShader, [background], controls.density);
     time++;
-    // stats.end();
+    test.setTime(time * 0.01);
+    stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
@@ -97,13 +150,11 @@ function main() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
-    flat.setDimensions(window.innerWidth, window.innerHeight);
   }, false);
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
-  flat.setDimensions(window.innerWidth, window.innerHeight);
 
   // Start the render loop
   tick();
