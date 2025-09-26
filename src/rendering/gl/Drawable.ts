@@ -1,52 +1,67 @@
 import {gl} from '../../globals';
 
 abstract class Drawable {
-  count: number = 0;
+    count: number = 0;
 
-  bufIdx: WebGLBuffer;
-  bufPos: WebGLBuffer;
+    bufIdx: WebGLBuffer;
+    bufPos: WebGLBuffer;
+    bufNor: WebGLBuffer;
 
-  idxBound: boolean = false;
-  posBound: boolean = false;
+    idxBound: boolean = false;
+    posBound: boolean = false;
+    norBound: boolean = false;
 
-  abstract create() : void;
+    abstract create() : void;
 
-  destory() {
-    gl.deleteBuffer(this.bufIdx);
-    gl.deleteBuffer(this.bufPos);
-  }
-
-  generateIdx() {
-    this.idxBound = true;
-    this.bufIdx = gl.createBuffer();
-  }
-
-  generatePos() {
-    this.posBound = true;
-    this.bufPos = gl.createBuffer();
-  }
-
-  bindIdx(): boolean {
-    if (this.idxBound) {
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
+    destory() {
+        gl.deleteBuffer(this.bufIdx);
+        gl.deleteBuffer(this.bufPos);
+        gl.deleteBuffer(this.bufNor);
     }
-    return this.idxBound;
-  }
 
-  bindPos(): boolean {
-    if (this.posBound) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufPos);
+    generateIdx() {
+        this.idxBound = true;
+        this.bufIdx = gl.createBuffer();
     }
-    return this.posBound;
-  }
 
-  elemCount(): number {
-    return this.count;
-  }
+    generatePos() {
+        this.posBound = true;
+        this.bufPos = gl.createBuffer();
+    }
 
-  drawMode(): GLenum {
-    return gl.TRIANGLES;
-  }
+    generateNor() {
+        this.norBound = true;
+        this.bufNor = gl.createBuffer();
+    }
+
+    bindIdx(): boolean {
+        if (this.idxBound) {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
+        }
+        return this.idxBound;
+    }
+
+    bindPos(): boolean {
+        if (this.posBound) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufPos);
+        }
+        return this.posBound;
+    }
+
+    bindNor(): boolean {
+        if (this.norBound) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufNor);
+        }
+        return this.norBound;
+    }
+
+    elemCount(): number {
+        return this.count;
+    }
+
+    drawMode(): GLenum {
+        return gl.TRIANGLES;
+    }
 };
 
 export default Drawable;
