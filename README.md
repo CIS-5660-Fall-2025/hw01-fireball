@@ -1,5 +1,9 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+- **toolbox functions**: smoother step (for perlin noise), bias, gain, sine interpolation
+- **interactivity**: new sliders are HSV hue offset, number of noise octaves, and fade rate
+- **extra spice**: background with frame persistence / fade effect
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
