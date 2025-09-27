@@ -23,8 +23,21 @@ class OpenGLRenderer {
   }
 
   render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>, time: number) {
+    let model = mat4.create();
+    let viewProj = mat4.create();
+    
+    mat4.identity(model);
+    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+    prog.setModelMatrix(model);
+    prog.setViewProjMatrix(viewProj);
+
     prog.setEyeRefUp(camera.controls.eye, camera.controls.center, camera.controls.up);
     prog.setTime(time);
+
+    prog.setNoiseAmount(0.2);
+    prog.setNoiseSpeed(0.01);
+    prog.setNoiseScale(1.0);
+    
 
     for (let drawable of drawables) {
       prog.draw(drawable);
